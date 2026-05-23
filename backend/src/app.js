@@ -1,0 +1,119 @@
+const express = require("express");
+
+const cors = require("cors");
+
+const helmet = require("helmet");
+
+const rateLimit = require("express-rate-limit");
+
+const session = require("express-session");
+
+const path = require("path");
+
+// MIDDLEWARES
+const errorHandler = require("./middlewares/errorHandler");
+
+const notFound = require("./middlewares/notFound");
+
+// ROUTES
+const authRoutes = require("./routes/authRoutes");
+
+const productRoutes = require("./routes/productRoutes");
+
+const cartRoutes = require("./routes/cartRoutes");
+
+const orderRoutes = require("./routes/orderRoutes");
+
+const adminRoutes = require("./routes/adminRoutes");
+
+const wishlistRoutes = require("./routes/wishlistRoutes");
+
+const userRoutes = require("./routes/userRoutes");
+
+const app = express();
+
+// BODY PARSER
+app.use(
+  express.json({
+    limit: "10mb",
+  }),
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
+
+// SECURITY
+app.use(helmet());
+
+// CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "*",
+
+    credentials: true,
+  }),
+);
+
+// RATE LIMIT
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+
+  max: 200,
+
+  message: {
+    success: false,
+
+    message: "Too many requests, please try again later",
+  },
+});
+
+app.use("/api", limiter);
+
+// SESSION
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "fallback_session_secret",
+
+    resave: false,
+
+    saveUninitialized: false,
+  }),
+);
+
+// STATIC UPLOADS
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// HEALTH ROUTE
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+
+    message: "Grocery Shop API is running 🚀",
+  });
+});
+
+// API ROUTES
+app.use("/api/auth", authRoutes);
+
+app.use("/api/products", productRoutes);
+
+app.use("/api/cart", cartRoutes);
+
+app.use("/api/orders", orderRoutes);
+
+app.use("/api/admin", adminRoutes);
+
+app.use("/api/wishlist", wishlistRoutes);
+
+app.use("/api/users", userRoutes);
+
+// NOT FOUND
+app.use(notFound);
+
+// ERROR HANDLER
+app.use(errorHandler);
+
+module.exports = app;

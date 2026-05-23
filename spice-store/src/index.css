@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-cream text-dark font-body;
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+.btn-primary {
+  @apply bg-primary hover:bg-secondary text-white px-5 py-3 rounded-xl transition-all duration-300;
+}
+
+.card-hover {
+  @apply hover:scale-[1.02] hover:shadow-2xl transition-all duration-300;
+}
