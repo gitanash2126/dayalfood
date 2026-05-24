@@ -37,7 +37,9 @@ export default function ProductDetails() {
 
   const [quantity, setQuantity] = useState(1);
 
+  // ==========================================
   // FETCH PRODUCT
+  // ==========================================
   useEffect(() => {
     fetchProduct();
   }, [slug]);
@@ -77,7 +79,9 @@ export default function ProductDetails() {
     }
   };
 
+  // ==========================================
   // LOADING
+  // ==========================================
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fffdf8]">
@@ -90,7 +94,9 @@ export default function ProductDetails() {
     );
   }
 
+  // ==========================================
   // NOT FOUND
+  // ==========================================
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fffdf8]">
@@ -103,12 +109,16 @@ export default function ProductDetails() {
     );
   }
 
+  // ==========================================
   // IMAGE URL
+  // ==========================================
   const imageUrl = product.image?.startsWith("/uploads")
-    ? `http://localhost:5000${product.image}`
+    ? `https://dayalfood-backend.onrender.com${product.image}`
     : product.image;
 
+  // ==========================================
   // ADD TO CART
+  // ==========================================
   const handleAddToCart = () => {
     addToCart({
       ...product,
@@ -118,37 +128,37 @@ export default function ProductDetails() {
   };
 
   return (
-    <div className="bg-[#fffdf8]">
+    <div className="bg-[#fffdf8] overflow-hidden">
       {/* PRODUCT */}
-      <section className="py-14 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-20">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-16">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
             {/* IMAGE */}
-            <div className="sticky top-28">
-              <div className="bg-white rounded-[36px] overflow-hidden border border-orange-100 shadow-xl">
+            <div className="lg:sticky lg:top-28 h-fit">
+              <div className="bg-white rounded-[28px] lg:rounded-[36px] overflow-hidden border border-orange-100 shadow-xl">
                 <img
                   src={imageUrl}
                   alt={product.name}
                   loading="lazy"
-                  className="w-full h-[550px] object-cover hover:scale-105 transition duration-500"
+                  className="w-full h-[320px] sm:h-[420px] lg:h-[550px] object-cover hover:scale-105 transition duration-500"
                 />
               </div>
             </div>
 
             {/* CONTENT */}
-            <div>
+            <div className="overflow-hidden">
               {/* CATEGORY */}
-              <p className="text-primary font-semibold uppercase tracking-wide">
+              <p className="text-primary font-semibold uppercase tracking-wide text-sm sm:text-base">
                 {product.category}
               </p>
 
               {/* NAME */}
-              <h1 className="font-heading text-5xl text-dark mt-3 leading-tight">
+              <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-dark mt-3 leading-tight break-words">
                 {product.name}
               </h1>
 
               {/* RATING */}
-              <div className="flex items-center gap-4 mt-6">
+              <div className="flex flex-wrap items-center gap-3 mt-6">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
@@ -163,19 +173,19 @@ export default function ProductDetails() {
                   ))}
                 </div>
 
-                <span className="text-gray-500 text-lg">
+                <span className="text-gray-500 text-base sm:text-lg">
                   ({product.numReviews} Reviews)
                 </span>
               </div>
 
               {/* PRICE */}
-              <div className="flex items-center gap-5 mt-8">
-                <span className="text-5xl font-bold text-primary">
+              <div className="flex flex-wrap items-center gap-4 mt-8">
+                <span className="text-4xl sm:text-5xl font-bold text-primary">
                   ₹{product.price}
                 </span>
 
                 {product.mrp && (
-                  <span className="text-2xl text-gray-400 line-through">
+                  <span className="text-xl sm:text-2xl text-gray-400 line-through">
                     ₹{product.mrp}
                   </span>
                 )}
@@ -210,7 +220,7 @@ export default function ProductDetails() {
               <div className="mt-10">
                 <h3 className="font-semibold text-2xl">Description</h3>
 
-                <p className="text-gray-600 leading-8 mt-5 text-lg">
+                <p className="text-gray-600 leading-8 mt-5 text-base sm:text-lg break-words">
                   {product.description}
                 </p>
               </div>
@@ -245,12 +255,12 @@ export default function ProductDetails() {
               </div>
 
               {/* BUTTONS */}
-              <div className="flex flex-wrap gap-5 mt-12">
+              <div className="flex flex-col sm:flex-row gap-5 mt-12">
                 {/* ADD TO CART */}
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
-                  className="flex items-center gap-3 bg-primary hover:bg-secondary disabled:opacity-50 text-white px-10 py-5 rounded-2xl font-semibold transition shadow-xl"
+                  className="flex items-center justify-center gap-3 bg-primary hover:bg-secondary disabled:opacity-50 text-white px-10 py-5 rounded-2xl font-semibold transition shadow-xl w-full sm:w-auto"
                 >
                   <ShoppingCart size={22} />
                   Add To Cart
@@ -264,7 +274,7 @@ export default function ProductDetails() {
                     navigate("/checkout");
                   }}
                   disabled={product.stock === 0}
-                  className="border border-orange-200 hover:border-primary hover:text-primary px-10 py-5 rounded-2xl font-semibold transition"
+                  className="border border-orange-200 hover:border-primary hover:text-primary px-10 py-5 rounded-2xl font-semibold transition w-full sm:w-auto"
                 >
                   Buy Now
                 </button>
@@ -337,7 +347,7 @@ export default function ProductDetails() {
 
           {/* REVIEWS */}
           <div className="mt-24">
-            <h2 className="font-heading text-5xl text-dark mb-12">
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-dark mb-12">
               Customer Reviews
             </h2>
 
@@ -390,7 +400,7 @@ export default function ProductDetails() {
             <div className="mb-12">
               <p className="text-primary font-semibold">More Products</p>
 
-              <h2 className="font-heading text-5xl text-dark mt-3">
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-dark mt-3">
                 Related Products
               </h2>
             </div>
