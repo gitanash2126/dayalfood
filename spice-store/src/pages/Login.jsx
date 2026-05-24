@@ -38,19 +38,16 @@ export default function Login() {
 
       console.log("LOGIN RESPONSE:", response.data);
 
-      // BACKEND RESPONSE
-      const responseData = response.data.data;
+      // USER DATA
+      const user = response.data.data;
 
-      // TOKEN
-      const token = responseData.token;
-
-      // LOGIN
-      await login(token);
+      // SAVE USER
+      login(user);
 
       alert("Login Successful");
 
       // ADMIN REDIRECT
-      if (responseData.role === "admin") {
+      if (user.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");

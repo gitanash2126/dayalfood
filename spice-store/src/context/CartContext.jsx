@@ -5,83 +5,88 @@ import API from "../api/axios";
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
+  // ==========================================
+  // STATES
+  // ==========================================
   const [cartItems, setCartItems] = useState([]);
 
-  // LOAD CART
-  useEffect(() => {
-    const savedCart = localStorage.getItem("dayal-cart");
+  const [loading, setLoading] = useState(true);
 
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    }
+  // ==========================================
+  // FETCH CART FROM BACKEND
+  // ==========================================
+  useEffect(() => {
+    fetchCart();
   }, []);
 
-  // SAVE CART
-  useEffect(() => {
-    localStorage.setItem("dayal-cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
 
+      const { data } = await API.get("/cart");
+
+      console.log("CART RESPONSE:", data);
+
+      const items = data.data?.items || [];
+
+      // FORMAT CART
+      const formattedItems = items.map((item) => ({
+        _id: item.product?._id,
+
+        name: item.product?.name || "Product",
+
+        image: item.product?.image || "",
+
+        category: item.product?.category || "Spices",
+
+        weight: item.product?.weight || "500g",
+
+        price: Number(item.product?.price || 0),
+
+        sale_price: Number(
+          item.product?.sale_price || item.product?.price || 0,
+        ),
+
+        quantity: Number(item.quantity || 1),
+
+        stock: Number(item.product?.stock || 0),
+      }));
+
+      setCartItems(formattedItems);
+    } catch (error) {
+      console.log(error);
+
+      // IGNORE 401
+      if (error.response?.status !== 401) {
+        alert("Failed to fetch cart");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
   // ADD TO CART
-  const addToCart = async (product) => {
+  // ==========================================
+  const addToCart = async (product, qty = 1) => {
     try {
       const productId = product._id || product.id;
 
-      // CHECK PRODUCT ID
       if (!productId) {
-        alert("Product ID is required");
+        alert("Product ID missing");
 
         return;
       }
 
-      // BACKEND API
+      // API
       await API.post("/cart", {
         productId,
-        quantity: 1,
+
+        quantity: qty,
       });
 
-      // CLEAN PRODUCT OBJECT
-      const newProduct = {
-        _id: productId,
-
-        name: product.name || "Premium Spice",
-
-        image: product.image || product.images?.[0] || "",
-
-        category:
-          typeof product.category === "object"
-            ? product.category?.name
-            : product.category || "Spices",
-
-        weight: product.weight || "500g",
-
-        price: Number(product.price || 0),
-
-        sale_price: Number(product.sale_price || product.price || 0),
-
-        quantity: 1,
-      };
-
-      // UPDATE CART
-      setCartItems((prevItems) => {
-        const existingProduct = prevItems.find(
-          (item) => String(item._id) === String(productId),
-        );
-
-        // IF EXISTS
-        if (existingProduct) {
-          return prevItems.map((item) =>
-            String(item._id) === String(productId)
-              ? {
-                  ...item,
-                  quantity: item.quantity + 1,
-                }
-              : item,
-          );
-        }
-
-        // NEW ITEM
-        return [...prevItems, newProduct];
-      });
+      // REFRESH CART
+      await fetchCart();
 
       alert("Added To Cart");
     } catch (error) {
@@ -91,57 +96,157 @@ export function CartProvider({ children }) {
     }
   };
 
-  // REMOVE
-  const removeFromCart = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => String(item._id) !== String(id)),
-    );
+  // ==========================================
+  // REMOVE ITEM
+  // ==========================================
+  const removeFromCart = async (productId) => {
+    try {
+      await API.delete(`/cart/${productId}`);
+
+      // UPDATE UI
+      setCartItems((prev) =>
+        prev.filter((item) => String(item._id) !== String(productId)),
+      );
+
+      alert("Item Removed");
+    } catch (error) {
+      console.log(error);
+
+      alert(error.response?.data?.message || "Remove Failed");
+    }
   };
 
-  // INCREASE
-  const increaseQuantity = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        String(item._id) === String(id)
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item,
-      ),
-    );
+  // ==========================================
+  // INCREASE QUANTITY
+  // ==========================================
+  const increaseQuantity = async (productId) => {
+    try {
+      const item = cartItems.find(
+        (item) => String(item._id) === String(productId),
+      );
+
+      if (!item) return;
+
+      // STOCK CHECK
+      if (item.quantity >= item.stock) {
+        alert("Maximum stock reached");
+
+        return;
+      }
+
+      const newQty = item.quantity + 1;
+
+      // BACKEND UPDATE
+      await API.put(`/cart/${productId}`, {
+        quantity: newQty,
+      });
+
+      // UPDATE UI
+      setCartItems((prev) =>
+        prev.map((item) =>
+          String(item._id) === String(productId)
+            ? {
+                ...item,
+
+                quantity: newQty,
+              }
+            : item,
+        ),
+      );
+    } catch (error) {
+      console.log(error);
+
+      alert("Failed to update quantity");
+    }
   };
 
-  // DECREASE
-  const decreaseQuantity = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        String(item._id) === String(id)
-          ? {
-              ...item,
-              quantity: item.quantity > 1 ? item.quantity - 1 : 1,
-            }
-          : item,
-      ),
-    );
+  // ==========================================
+  // DECREASE QUANTITY
+  // ==========================================
+  const decreaseQuantity = async (productId) => {
+    try {
+      const item = cartItems.find(
+        (item) => String(item._id) === String(productId),
+      );
+
+      if (!item) return;
+
+      const newQty = item.quantity > 1 ? item.quantity - 1 : 1;
+
+      // BACKEND UPDATE
+      await API.put(`/cart/${productId}`, {
+        quantity: newQty,
+      });
+
+      // UPDATE UI
+      setCartItems((prev) =>
+        prev.map((item) =>
+          String(item._id) === String(productId)
+            ? {
+                ...item,
+
+                quantity: newQty,
+              }
+            : item,
+        ),
+      );
+    } catch (error) {
+      console.log(error);
+
+      alert("Failed to update quantity");
+    }
   };
 
-  // TOTAL
+  // ==========================================
+  // CLEAR CART
+  // ==========================================
+  const clearCart = async () => {
+    try {
+      await API.delete("/cart");
+
+      setCartItems([]);
+
+      alert("Cart Cleared");
+    } catch (error) {
+      console.log(error);
+
+      alert("Failed to clear cart");
+    }
+  };
+
+  // ==========================================
+  // CART TOTAL
+  // ==========================================
   const cartTotal = cartItems.reduce(
     (total, item) =>
       total +
       Number(item.sale_price || item.price || 0) * Number(item.quantity || 1),
+
     0,
   );
 
+  // ==========================================
+  // PROVIDER
+  // ==========================================
   return (
     <CartContext.Provider
       value={{
         cartItems,
+
+        loading,
+
         addToCart,
+
         removeFromCart,
+
         increaseQuantity,
+
         decreaseQuantity,
+
+        clearCart,
+
+        fetchCart,
+
         cartTotal,
       }}
     >
@@ -150,7 +255,9 @@ export function CartProvider({ children }) {
   );
 }
 
+// ==========================================
 // CUSTOM HOOK
+// ==========================================
 export function useCart() {
   return useContext(CartContext);
 }

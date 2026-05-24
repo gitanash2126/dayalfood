@@ -2,17 +2,19 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: "http://localhost:5000/api",
+
+  withCredentials: true,
 });
 
-// TOKEN SEND
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("token");
+// OPTIONAL RESPONSE HANDLER
+API.interceptors.response.use(
+  (response) => response,
 
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
+  (error) => {
+    console.log("API ERROR:", error.response?.data || error.message);
 
-  return req;
-});
+    return Promise.reject(error);
+  },
+);
 
 export default API;

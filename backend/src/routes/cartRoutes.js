@@ -12,11 +12,39 @@ const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.get("/", protect, getCart);
-router.post("/", protect, addToCart);
-router.delete("/", protect, clearCart);
+// ==========================================
+// ALL CART ROUTES PROTECTED
+// ==========================================
+router.use(protect);
 
-router.put("/:productId", protect, updateCartItem);
-router.delete("/:productId", protect, removeFromCart);
+// ==========================================
+// GET USER CART
+// GET /api/cart
+// ==========================================
+router.get("/", getCart);
+
+// ==========================================
+// ADD TO CART
+// POST /api/cart
+// ==========================================
+router.post("/", addToCart);
+
+// ==========================================
+// UPDATE CART ITEM QUANTITY
+// PUT /api/cart/:productId
+// ==========================================
+router.put("/:productId", updateCartItem);
+
+// ==========================================
+// REMOVE SINGLE ITEM
+// DELETE /api/cart/:productId
+// ==========================================
+router.delete("/:productId", removeFromCart);
+
+// ==========================================
+// CLEAR ENTIRE CART
+// DELETE /api/cart
+// ==========================================
+router.delete("/", clearCart);
 
 module.exports = router;

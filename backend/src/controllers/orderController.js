@@ -1,29 +1,48 @@
 const Order = require("../models/Order");
+
 const Product = require("../models/Product");
+
 const Cart = require("../models/Cart");
+
 const User = require("../models/User");
+
 const asyncHandler = require("../utils/asyncHandler");
+
 const { successResponse } = require("../utils/apiResponse");
 
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Private
+// ==========================================
+// CREATE ORDER
+// POST /api/orders
+// ==========================================
 const createOrder = asyncHandler(async (req, res) => {
-  const { orderItems, shippingAddress, addressId, paymentMethod } = req.body;
+  const {
+    orderItems,
 
+    shippingAddress,
+
+    addressId,
+
+    paymentMethod,
+  } = req.body;
+
+  // VALIDATION
   if (!orderItems || orderItems.length === 0) {
     res.status(400);
+
     throw new Error("No order items");
   }
 
   let finalShippingAddress = shippingAddress;
 
-  // If addressId is provided, use saved address from user profile
+  // ==========================================
+  // SAVED ADDRESS
+  // ==========================================
   if (addressId) {
     const user = await User.findById(req.user._id);
 
     if (!user) {
       res.status(404);
+
       throw new Error("User not found");
     }
 
@@ -31,20 +50,30 @@ const createOrder = asyncHandler(async (req, res) => {
 
     if (!savedAddress) {
       res.status(404);
+
       throw new Error("Saved address not found");
     }
 
     finalShippingAddress = {
       fullName: savedAddress.fullName,
+
       phone: savedAddress.phone,
+
       address: savedAddress.address,
+
       city: savedAddress.city,
+
       state: savedAddress.state,
+
       postalCode: savedAddress.postalCode,
+
       country: savedAddress.country,
     };
   }
 
+  // ==========================================
+  // ADDRESS VALIDATION
+  // ==========================================
   if (
     !finalShippingAddress ||
     !finalShippingAddress.fullName ||
@@ -55,9 +84,13 @@ const createOrder = asyncHandler(async (req, res) => {
     !finalShippingAddress.postalCode
   ) {
     res.status(400);
+
     throw new Error("Shipping address is required");
   }
 
+  // ==========================================
+  // VALIDATE PRODUCTS
+  // ==========================================
   const itemsFromDB = [];
 
   for (const item of orderItems) {
@@ -65,11 +98,14 @@ const createOrder = asyncHandler(async (req, res) => {
 
     if (!product || !product.isActive) {
       res.status(404);
+
       throw new Error(`Product not found: ${item.product}`);
     }
 
+    // STOCK CHECK
     if (product.stock < item.quantity) {
       res.status(400);
+
       throw new Error(
         `Only ${product.stock} items available for ${product.name}`,
       );
@@ -77,64 +113,102 @@ const createOrder = asyncHandler(async (req, res) => {
 
     itemsFromDB.push({
       product: product._id,
+
       name: product.name,
-      imageUrl: product.imageUrl,
+
+      imageUrl: product.image,
+
       price: product.price,
+
       quantity: item.quantity,
     });
   }
 
+  // ==========================================
+  // CALCULATIONS
+  // ==========================================
   const itemsPrice = itemsFromDB.reduce(
     (acc, item) => acc + item.price * item.quantity,
+
     0,
   );
 
   const shippingPrice = itemsPrice >= 500 ? 0 : 40;
+
   const taxPrice = 0;
+
   const totalPrice = itemsPrice + shippingPrice + taxPrice;
 
+  // ==========================================
+  // CREATE ORDER
+  // ==========================================
   const order = await Order.create({
     user: req.user._id,
+
     orderItems: itemsFromDB,
+
     shippingAddress: finalShippingAddress,
+
     paymentMethod: paymentMethod || "COD",
+
     itemsPrice,
+
     shippingPrice,
+
     taxPrice,
+
     totalPrice,
   });
 
-  // Reduce stock
+  // ==========================================
+  // REDUCE STOCK
+  // ==========================================
   for (const item of itemsFromDB) {
     await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity },
+      $inc: {
+        stock: -item.quantity,
+      },
     });
   }
 
-  // Clear cart after order
+  // ==========================================
+  // CLEAR CART
+  // ==========================================
   await Cart.findOneAndUpdate(
-    { user: req.user._id },
-    { items: [] },
-    { new: true },
+    {
+      user: req.user._id,
+    },
+
+    {
+      items: [],
+    },
+
+    {
+      new: true,
+    },
   );
 
   successResponse(res, 201, "Order created successfully", order);
 });
 
-// @desc    Get logged in user's orders
-// @route   GET /api/orders/myorders
-// @access  Private
+// ==========================================
+// GET MY ORDERS
+// GET /api/orders/myorders
+// ==========================================
 const getMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user._id }).sort({
+  const orders = await Order.find({
+    user: req.user._id,
+  }).sort({
     createdAt: -1,
   });
 
   successResponse(res, 200, "My orders fetched successfully", orders);
 });
 
-// @desc    Get order by id
-// @route   GET /api/orders/:id
-// @access  Private
+// ==========================================
+// GET ORDER BY ID
+// GET /api/orders/:id
+// ==========================================
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate(
     "user",
@@ -143,48 +217,62 @@ const getOrderById = asyncHandler(async (req, res) => {
 
   if (!order) {
     res.status(404);
+
     throw new Error("Order not found");
   }
 
   const isOwner = order.user._id.toString() === req.user._id.toString();
+
   const isAdmin = req.user.role === "admin";
 
   if (!isOwner && !isAdmin) {
     res.status(403);
+
     throw new Error("Not authorized to view this order");
   }
 
   successResponse(res, 200, "Order fetched successfully", order);
 });
 
-// @desc    Get all orders
-// @route   GET /api/orders
-// @access  Admin
+// ==========================================
+// GET ALL ORDERS
+// GET /api/orders
+// ==========================================
 const getOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({})
     .populate("user", "name email phone")
-    .sort({ createdAt: -1 });
+    .sort({
+      createdAt: -1,
+    });
 
   successResponse(res, 200, "Orders fetched successfully", orders);
 });
 
-// @desc    Update order status
-// @route   PUT /api/orders/:id/status
-// @access  Admin
+// ==========================================
+// UPDATE ORDER STATUS
+// PUT /api/orders/:id/status
+// ==========================================
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { orderStatus } = req.body;
 
   const allowedStatus = [
     "Pending",
+
     "Confirmed",
+
     "Processing",
+
     "Shipped",
+
     "Delivered",
+
     "Cancelled",
   ];
 
+  // VALIDATION
   if (!allowedStatus.includes(orderStatus)) {
     res.status(400);
+
     throw new Error("Invalid order status");
   }
 
@@ -192,15 +280,21 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   if (!order) {
     res.status(404);
+
     throw new Error("Order not found");
   }
 
   order.orderStatus = orderStatus;
 
+  // DELIVERED
   if (orderStatus === "Delivered") {
     order.deliveredAt = Date.now();
+
     order.paymentStatus = "Paid";
-    order.paidAt = Date.now();
+
+    if (!order.paidAt) {
+      order.paidAt = Date.now();
+    }
   }
 
   await order.save();
@@ -208,16 +302,19 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   successResponse(res, 200, "Order status updated successfully", order);
 });
 
-// @desc    Update payment status
-// @route   PUT /api/orders/:id/payment
-// @access  Admin
+// ==========================================
+// UPDATE PAYMENT STATUS
+// PUT /api/orders/:id/payment
+// ==========================================
 const updatePaymentStatus = asyncHandler(async (req, res) => {
   const { paymentStatus } = req.body;
 
   const allowedStatus = ["Pending", "Paid", "Failed", "Refunded"];
 
+  // VALIDATION
   if (!allowedStatus.includes(paymentStatus)) {
     res.status(400);
+
     throw new Error("Invalid payment status");
   }
 
@@ -225,12 +322,14 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
 
   if (!order) {
     res.status(404);
+
     throw new Error("Order not found");
   }
 
   order.paymentStatus = paymentStatus;
 
-  if (paymentStatus === "Paid") {
+  // PAID
+  if (paymentStatus === "Paid" && !order.paidAt) {
     order.paidAt = Date.now();
   }
 
@@ -239,41 +338,53 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
   successResponse(res, 200, "Payment status updated successfully", order);
 });
 
-// @desc    Cancel order
-// @route   PUT /api/orders/:id/cancel
-// @access  Private
+// ==========================================
+// CANCEL ORDER
+// PUT /api/orders/:id/cancel
+// ==========================================
 const cancelOrder = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (!order) {
     res.status(404);
+
     throw new Error("Order not found");
   }
 
   const isOwner = order.user.toString() === req.user._id.toString();
+
   const isAdmin = req.user.role === "admin";
 
+  // ACCESS CHECK
   if (!isOwner && !isAdmin) {
     res.status(403);
+
     throw new Error("Not authorized to cancel this order");
   }
 
-  if (order.orderStatus === "Delivered") {
+  // BLOCK CANCEL
+  if (order.orderStatus === "Delivered" || order.orderStatus === "Shipped") {
     res.status(400);
-    throw new Error("Delivered order cannot be cancelled");
+
+    throw new Error("Order cannot be cancelled now");
   }
 
+  // ALREADY CANCELLED
   if (order.orderStatus === "Cancelled") {
     res.status(400);
+
     throw new Error("Order already cancelled");
   }
 
+  // CANCEL
   order.orderStatus = "Cancelled";
 
-  // Restore stock
+  // RESTORE STOCK
   for (const item of order.orderItems) {
     await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: item.quantity },
+      $inc: {
+        stock: item.quantity,
+      },
     });
   }
 
@@ -284,10 +395,16 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
 module.exports = {
   createOrder,
+
   getMyOrders,
+
   getOrderById,
+
   getOrders,
+
   updateOrderStatus,
+
   updatePaymentStatus,
+
   cancelOrder,
 };

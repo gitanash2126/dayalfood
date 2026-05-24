@@ -16,7 +16,9 @@ export default function MyOrders() {
 
   const [loading, setLoading] = useState(true);
 
+  // ==========================================
   // FETCH ORDERS
+  // ==========================================
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -25,17 +27,19 @@ export default function MyOrders() {
     try {
       const { data } = await API.get("/orders/myorders");
 
-      console.log(data);
+      console.log("MY ORDERS:", data);
 
       setOrders(data.data || []);
     } catch (error) {
-      console.log(error);
+      console.log("ORDER ERROR:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // ==========================================
   // CANCEL ORDER
+  // ==========================================
   const cancelOrder = async (id) => {
     const confirmCancel = window.confirm("Cancel this order?");
 
@@ -44,7 +48,7 @@ export default function MyOrders() {
     }
 
     try {
-      await API.put(`/orders/${id}/cancel`);
+      await API.put(`/orders/${id}/cancel`, {});
 
       alert("Order Cancelled");
 
@@ -56,7 +60,9 @@ export default function MyOrders() {
     }
   };
 
+  // ==========================================
   // LOADING
+  // ==========================================
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-3xl font-bold bg-[#fffdf8]">
@@ -128,7 +134,7 @@ export default function MyOrders() {
                         {order.paymentStatus}
                       </span>
 
-                      {/* ORDER STATUS */}
+                      {/* STATUS */}
                       <span
                         className={`px-6 py-3 rounded-full text-sm font-semibold ${
                           order.orderStatus === "Delivered"
@@ -163,10 +169,14 @@ export default function MyOrders() {
                             <div className="flex items-center gap-5">
                               <img
                                 src={
-                                  item.imageUrl
-                                    ? item.imageUrl.startsWith("/uploads")
-                                      ? `http://localhost:5000${item.imageUrl}`
-                                      : item.imageUrl
+                                  item.imageUrl || item.product?.image
+                                    ? (
+                                        item.imageUrl || item.product?.image
+                                      ).startsWith("/uploads")
+                                      ? `http://localhost:5000${
+                                          item.imageUrl || item.product?.image
+                                        }`
+                                      : item.imageUrl || item.product?.image
                                     : "https://via.placeholder.com/120"
                                 }
                                 alt={item.name}

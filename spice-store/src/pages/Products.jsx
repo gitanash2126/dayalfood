@@ -1,6 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { SlidersHorizontal, X, Search } from "lucide-react";
+import {
+  SlidersHorizontal,
+  X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import ProductCard from "../components/products/ProductCard";
 
@@ -16,6 +22,11 @@ export default function Products() {
   // LOADING
   const [loading, setLoading] = useState(true);
 
+  // PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [totalPages, setTotalPages] = useState(1);
+
   // FILTER STATES
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -28,24 +39,54 @@ export default function Products() {
   // CATEGORIES
   const categories = [
     "All",
+
     "Whole Spices",
+
     "Ground Spices",
+
     "Masala Blends",
+
     "Seeds",
   ];
 
   // FETCH PRODUCTS
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [currentPage, selectedCategory, sortBy, maxPrice]);
 
   const fetchProducts = async () => {
     try {
-      const { data } = await API.get("/products");
+      setLoading(true);
+
+      let url = `/products?page=${currentPage}&limit=9`;
+
+      // SEARCH
+      if (searchTerm.trim()) {
+        url += `&keyword=${searchTerm}`;
+      }
+
+      // CATEGORY
+      if (selectedCategory !== "All") {
+        url += `&category=${selectedCategory}`;
+      }
+
+      // SORT
+      if (sortBy) {
+        url += `&sort=${sortBy}`;
+      }
+
+      // PRICE
+      url += `&maxPrice=${maxPrice}`;
+
+      const { data } = await API.get(url);
 
       console.log("Products API:", data);
 
-      setProducts(data.products || data.data?.products || []);
+      const responseData = data.data;
+
+      setProducts(responseData.products || []);
+
+      setTotalPages(responseData.totalPages || 1);
     } catch (error) {
       console.log(error);
     } finally {
@@ -53,36 +94,22 @@ export default function Products() {
     }
   };
 
-  // FILTER PRODUCTS
-  let filteredProducts = products.filter((product) => {
-    // CATEGORY
-    const categoryMatch =
-      selectedCategory === "All" || product.category === selectedCategory;
+  // SEARCH HANDLER
+  const handleSearch = () => {
+    setCurrentPage(1);
 
-    // SEARCH
-    const searchMatch = product.name
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    fetchProducts();
+  };
 
-    // PRICE
-    const priceMatch = product.price <= maxPrice;
-
-    return categoryMatch && searchMatch && priceMatch;
-  });
-
-  // SORTING
-  if (sortBy === "price-low") {
-    filteredProducts.sort((a, b) => a.price - b.price);
-  }
-
-  if (sortBy === "price-high") {
-    filteredProducts.sort((a, b) => b.price - a.price);
-  }
-
+  // LOADING
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-2xl font-semibold">
-        Loading Products...
+      <div className="flex justify-center items-center h-screen bg-[#fffdf8]">
+        <div className="text-center">
+          <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+
+          <p className="mt-6 text-2xl font-semibold">Loading Products...</p>
+        </div>
       </div>
     );
   }
@@ -100,8 +127,7 @@ export default function Products() {
             </h1>
 
             <p className="text-gray-600 max-w-2xl mx-auto mt-6 leading-8">
-              Explore our premium collection of authentic Indian spices and
-              masalas.
+              Explore premium Indian spices, masalas and authentic flavors.
             </p>
           </div>
         </div>
@@ -113,7 +139,7 @@ export default function Products() {
           <div className="flex gap-10">
             {/* SIDEBAR */}
             <div className="hidden lg:block w-[300px] shrink-0">
-              <div className="bg-white rounded-[32px] border border-orange-100 p-7 sticky top-28">
+              <div className="bg-white rounded-[32px] border border-orange-100 p-7 sticky top-28 shadow-lg">
                 <h2 className="text-2xl font-semibold text-dark mb-8">
                   Filters
                 </h2>
@@ -134,6 +160,13 @@ export default function Products() {
                       className="w-full border border-gray-200 rounded-2xl pl-12 pr-4 py-4 outline-none"
                     />
                   </div>
+
+                  <button
+                    onClick={handleSearch}
+                    className="w-full bg-primary hover:bg-secondary text-white py-4 rounded-2xl mt-4 font-semibold transition"
+                  >
+                    Search
+                  </button>
                 </div>
 
                 {/* CATEGORY */}
@@ -144,7 +177,11 @@ export default function Products() {
                     {categories.map((category) => (
                       <button
                         key={category}
-                        onClick={() => setSelectedCategory(category)}
+                        onClick={() => {
+                          setSelectedCategory(category);
+
+                          setCurrentPage(1);
+                        }}
                         className={`w-full text-left px-5 py-3 rounded-2xl transition font-medium ${
                           selectedCategory === category
                             ? "bg-primary text-white shadow-lg"
@@ -170,7 +207,9 @@ export default function Products() {
                     className="w-full"
                   />
 
-                  <p className="mt-3 font-semibold text-primary">₹{maxPrice}</p>
+                  <p className="mt-3 font-semibold text-primary text-lg">
+                    ₹{maxPrice}
+                  </p>
                 </div>
 
                 {/* SORT */}
@@ -187,6 +226,8 @@ export default function Products() {
                     <option value="price-low">Price Low to High</option>
 
                     <option value="price-high">Price High to Low</option>
+
+                    <option value="rating">Rating</option>
                   </select>
                 </div>
               </div>
@@ -198,7 +239,7 @@ export default function Products() {
               <div className="flex items-center justify-between mb-10">
                 <div>
                   <h2 className="text-3xl font-semibold text-dark">
-                    Showing {filteredProducts.length} Products
+                    {products.length} Products
                   </h2>
 
                   <p className="text-gray-500 mt-2">
@@ -218,9 +259,47 @@ export default function Products() {
 
               {/* GRID */}
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-20">
+                    <h2 className="text-4xl font-bold text-dark">
+                      No Products Found
+                    </h2>
+
+                    <p className="text-gray-500 mt-4">
+                      Try changing filters or search
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* PAGINATION */}
+              <div className="flex justify-center items-center gap-4 mt-16">
+                {/* PREV */}
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  className="bg-white border border-orange-100 hover:bg-primary hover:text-white w-14 h-14 rounded-2xl flex items-center justify-center transition disabled:opacity-50"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+
+                {/* PAGE */}
+                <div className="bg-primary text-white px-8 py-4 rounded-2xl font-semibold shadow-lg">
+                  Page {currentPage} of {totalPages}
+                </div>
+
+                {/* NEXT */}
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="bg-white border border-orange-100 hover:bg-primary hover:text-white w-14 h-14 rounded-2xl flex items-center justify-center transition disabled:opacity-50"
+                >
+                  <ChevronRight size={22} />
+                </button>
               </div>
             </div>
           </div>

@@ -3,35 +3,25 @@ import { ShoppingCart, Eye, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
-import productImages from "../../utils/productImages";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
 
-  // IMAGE FIX
-  const productImage =
-    productImages[product.image] ||
-    product.image ||
-    product.images?.[0] ||
-    "/images/default-product.jpg";
-
-  // PRODUCT ID FIX
+  // PRODUCT ID
   const productId = product._id || product.id;
 
-  // PRODUCT LINK FIX
+  // PRODUCT LINK
   const productLink = `/products/${productId}`;
+
+  // IMAGE FIX
+  const productImage = product.image?.startsWith("/uploads")
+    ? `http://localhost:5000${product.image}`
+    : product.image || "/images/default-product.jpg";
 
   return (
     <div className="group bg-white rounded-[32px] overflow-hidden border border-orange-100 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
       {/* IMAGE */}
       <div className="relative overflow-hidden bg-[#fff8f1]">
-        {/* SALE BADGE */}
-        {product.sale_price && (
-          <div className="absolute top-4 left-4 z-20 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-            SALE
-          </div>
-        )}
-
         {/* QUICK VIEW */}
         <Link
           to={productLink}
@@ -45,6 +35,7 @@ export default function ProductCard({ product }) {
           <img
             src={productImage}
             alt={product.name}
+            loading="lazy"
             className="w-full h-[280px] object-cover group-hover:scale-110 transition duration-700"
           />
         </Link>
@@ -75,12 +66,16 @@ export default function ProductCard({ product }) {
             <Star
               key={star}
               size={16}
-              className="fill-yellow-400 text-yellow-400"
+              className={`${
+                star <= Math.round(product.rating || 0)
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "text-gray-300"
+              }`}
             />
           ))}
 
           <span className="text-sm text-gray-500 ml-2">
-            ({product.rating || 4.9})
+            ({product.rating || 0})
           </span>
         </div>
 
@@ -91,25 +86,12 @@ export default function ProductCard({ product }) {
             : "Premium quality authentic Indian spice with rich aroma."}
         </p>
 
-        {/* PRICE + BUTTON */}
+        {/* PRICE */}
         <div className="flex items-center justify-between mt-6">
-          {/* PRICE */}
           <div>
-            {product.sale_price ? (
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-primary">
-                  ₹{product.sale_price}
-                </span>
-
-                <span className="text-gray-400 line-through">
-                  ₹{product.price}
-                </span>
-              </div>
-            ) : (
-              <span className="text-2xl font-bold text-primary">
-                ₹{product.price}
-              </span>
-            )}
+            <span className="text-2xl font-bold text-primary">
+              ₹{product.price}
+            </span>
           </div>
 
           {/* ADD TO CART */}

@@ -8,6 +8,8 @@ const rateLimit = require("express-rate-limit");
 
 const session = require("express-session");
 
+const cookieParser = require("cookie-parser");
+
 const path = require("path");
 
 // MIDDLEWARES
@@ -32,7 +34,9 @@ const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
+// ==========================================
 // BODY PARSER
+// ==========================================
 app.use(
   express.json({
     limit: "10mb",
@@ -45,19 +49,30 @@ app.use(
   }),
 );
 
+// ==========================================
+// COOKIE PARSER
+// ==========================================
+app.use(cookieParser());
+
+// ==========================================
 // SECURITY
+// ==========================================
 app.use(helmet());
 
+// ==========================================
 // CORS
+// ==========================================
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin: "http://localhost:5173",
 
     credentials: true,
   }),
 );
 
+// ==========================================
 // RATE LIMIT
+// ==========================================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
 
@@ -72,7 +87,9 @@ const limiter = rateLimit({
 
 app.use("/api", limiter);
 
+// ==========================================
 // SESSION
+// ==========================================
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback_session_secret",
@@ -80,13 +97,25 @@ app.use(
     resave: false,
 
     saveUninitialized: false,
+
+    cookie: {
+      secure: false,
+
+      httpOnly: true,
+
+      sameSite: "lax",
+    },
   }),
 );
 
+// ==========================================
 // STATIC UPLOADS
+// ==========================================
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+// ==========================================
 // HEALTH ROUTE
+// ==========================================
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -95,7 +124,9 @@ app.get("/", (req, res) => {
   });
 });
 
+// ==========================================
 // API ROUTES
+// ==========================================
 app.use("/api/auth", authRoutes);
 
 app.use("/api/products", productRoutes);
@@ -110,10 +141,14 @@ app.use("/api/wishlist", wishlistRoutes);
 
 app.use("/api/users", userRoutes);
 
+// ==========================================
 // NOT FOUND
+// ==========================================
 app.use(notFound);
 
+// ==========================================
 // ERROR HANDLER
+// ==========================================
 app.use(errorHandler);
 
 module.exports = app;

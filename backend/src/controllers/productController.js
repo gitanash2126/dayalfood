@@ -4,6 +4,10 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const { successResponse } = require("../utils/apiResponse");
 
+// ==========================================
+// CREATE PRODUCT
+// ==========================================
+
 // @desc    Create product
 // @route   POST /api/products
 // @access  Admin/Shopkeeper
@@ -43,10 +47,21 @@ const createProduct = asyncHandler(async (req, res) => {
   successResponse(res, 201, "Product created successfully", product);
 });
 
+// ==========================================
+// GET ALL PRODUCTS
+// ==========================================
+
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
+  // PAGINATION
+  const page = Number(req.query.page) || 1;
+
+  const limit = Number(req.query.limit) || 8;
+
+  const skip = (page - 1) * limit;
+
   // SEARCH
   const keyword = req.query.keyword
     ? {
@@ -54,6 +69,7 @@ const getProducts = asyncHandler(async (req, res) => {
           {
             name: {
               $regex: req.query.keyword,
+
               $options: "i",
             },
           },
@@ -61,6 +77,7 @@ const getProducts = asyncHandler(async (req, res) => {
           {
             description: {
               $regex: req.query.keyword,
+
               $options: "i",
             },
           },
@@ -68,6 +85,7 @@ const getProducts = asyncHandler(async (req, res) => {
           {
             brand: {
               $regex: req.query.keyword,
+
               $options: "i",
             },
           },
@@ -75,6 +93,7 @@ const getProducts = asyncHandler(async (req, res) => {
           {
             category: {
               $regex: req.query.keyword,
+
               $options: "i",
             },
           },
@@ -87,6 +106,7 @@ const getProducts = asyncHandler(async (req, res) => {
     ? {
         category: {
           $regex: req.query.category,
+
           $options: "i",
         },
       }
@@ -98,6 +118,7 @@ const getProducts = asyncHandler(async (req, res) => {
   if (req.query.minPrice) {
     priceFilter.price = {
       ...priceFilter.price,
+
       $gte: Number(req.query.minPrice),
     };
   }
@@ -105,6 +126,7 @@ const getProducts = asyncHandler(async (req, res) => {
   if (req.query.maxPrice) {
     priceFilter.price = {
       ...priceFilter.price,
+
       $lte: Number(req.query.maxPrice),
     };
   }
@@ -143,24 +165,36 @@ const getProducts = asyncHandler(async (req, res) => {
     ...priceFilter,
   };
 
-  // FETCH ALL PRODUCTS
-  const products = await Product.find(filter).sort(sortOption);
-
   // TOTAL
   const total = await Product.countDocuments(filter);
 
-  successResponse(res, 200, "Products fetched successfully", {
-    products,
+  // PRODUCTS
+  const products = await Product.find(filter)
+    .sort(sortOption)
+    .skip(skip)
+    .limit(limit)
+    .lean();
 
+  successResponse(res, 200, "Products fetched successfully", {
     total,
+
+    currentPage: page,
+
+    totalPages: Math.ceil(total / limit),
+
+    products,
   });
 });
+
+// ==========================================
+// GET PRODUCT BY ID
+// ==========================================
 
 // @desc    Get product by id
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).lean();
 
   if (!product || !product.isActive) {
     res.status(404);
@@ -170,6 +204,10 @@ const getProductById = asyncHandler(async (req, res) => {
 
   successResponse(res, 200, "Product fetched successfully", product);
 });
+
+// ==========================================
+// UPDATE PRODUCT
+// ==========================================
 
 // @desc    Update product
 // @route   PUT /api/products/:id
@@ -223,6 +261,10 @@ const updateProduct = asyncHandler(async (req, res) => {
   successResponse(res, 200, "Product updated successfully", updatedProduct);
 });
 
+// ==========================================
+// DELETE PRODUCT
+// ==========================================
+
 // @desc    Delete product
 // @route   DELETE /api/products/:id
 // @access  Admin/Shopkeeper
@@ -242,6 +284,10 @@ const deleteProduct = asyncHandler(async (req, res) => {
   });
 });
 
+// ==========================================
+// TOGGLE PRODUCT STATUS
+// ==========================================
+
 // @desc    Toggle product active/inactive
 // @route   PUT /api/products/:id/toggle-status
 // @access  Admin/Shopkeeper
@@ -260,6 +306,10 @@ const toggleProductStatus = asyncHandler(async (req, res) => {
 
   successResponse(res, 200, "Product status updated successfully", product);
 });
+
+// ==========================================
+// UPDATE PRODUCT STOCK
+// ==========================================
 
 // @desc    Update product stock
 // @route   PUT /api/products/:id/stock
@@ -288,6 +338,10 @@ const updateProductStock = asyncHandler(async (req, res) => {
   successResponse(res, 200, "Product stock updated successfully", product);
 });
 
+// ==========================================
+// FEATURED PRODUCTS
+// ==========================================
+
 // @desc    Get featured products
 // @route   GET /api/products/featured/list
 // @access  Public
@@ -296,12 +350,19 @@ const getFeaturedProducts = asyncHandler(async (req, res) => {
     isFeatured: true,
 
     isActive: true,
-  }).sort({
-    createdAt: -1,
-  });
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .limit(8)
+    .lean();
 
   successResponse(res, 200, "Featured products fetched successfully", products);
 });
+
+// ==========================================
+// PRODUCTS BY CATEGORY
+// ==========================================
 
 // @desc    Get products by category
 // @route   GET /api/products/category/:category
@@ -315,12 +376,19 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
     },
 
     isActive: true,
-  }).sort({
-    createdAt: -1,
-  });
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .limit(20)
+    .lean();
 
   successResponse(res, 200, "Category products fetched successfully", products);
 });
+
+// ==========================================
+// ADD REVIEW
+// ==========================================
 
 // @desc    Add product review
 // @route   POST /api/products/:id/reviews
@@ -381,6 +449,10 @@ const addProductReview = asyncHandler(async (req, res) => {
   successResponse(res, 201, "Review added successfully", product);
 });
 
+// ==========================================
+// GET REVIEWS
+// ==========================================
+
 // @desc    Get product reviews
 // @route   GET /api/products/:id/reviews
 // @access  Public
@@ -403,6 +475,10 @@ const getProductReviews = asyncHandler(async (req, res) => {
     reviews: product.reviews,
   });
 });
+
+// ==========================================
+// DELETE REVIEW
+// ==========================================
 
 // @desc    Delete product review
 // @route   DELETE /api/products/:id/reviews/:reviewId
