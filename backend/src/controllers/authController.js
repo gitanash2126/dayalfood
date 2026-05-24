@@ -7,8 +7,20 @@ const { successResponse } = require("../utils/apiResponse");
 const generateToken = require("../utils/generateToken");
 
 // ==========================================
+// COOKIE OPTIONS
+// ==========================================
+const cookieOptions = {
+  httpOnly: true,
+
+  secure: true,
+
+  sameSite: "none",
+
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+// ==========================================
 // REGISTER USER
-// @route POST /api/auth/register
 // ==========================================
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, phone } = req.body;
@@ -38,16 +50,8 @@ const registerUser = asyncHandler(async (req, res) => {
   // GENERATE TOKEN
   const token = generateToken(user._id);
 
-  // COOKIE
-  res.cookie("token", token, {
-    httpOnly: true,
-
-    secure: false,
-
-    sameSite: "lax",
-
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  // SET COOKIE
+  res.cookie("token", token, cookieOptions);
 
   // RESPONSE
   successResponse(res, 201, "User registered successfully", {
@@ -65,7 +69,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // ==========================================
 // LOGIN USER
-// @route POST /api/auth/login
 // ==========================================
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -101,15 +104,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const token = generateToken(user._id);
 
   // SET COOKIE
-  res.cookie("token", token, {
-    httpOnly: true,
-
-    secure: false,
-
-    sameSite: "lax",
-
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie("token", token, cookieOptions);
 
   // RESPONSE
   successResponse(res, 200, "Login successful", {
@@ -127,11 +122,14 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // ==========================================
 // LOGOUT USER
-// @route POST /api/auth/logout
 // ==========================================
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
+
+    secure: true,
+
+    sameSite: "none",
 
     expires: new Date(0),
   });
@@ -141,7 +139,6 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 // ==========================================
 // GET PROFILE
-// @route GET /api/auth/profile
 // ==========================================
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
@@ -157,7 +154,6 @@ const getProfile = asyncHandler(async (req, res) => {
 
 // ==========================================
 // UPDATE PROFILE
-// @route PUT /api/auth/profile
 // ==========================================
 const updateProfile = asyncHandler(async (req, res) => {
   const { name, phone } = req.body;
@@ -196,7 +192,6 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 // ==========================================
 // CHANGE PASSWORD
-// @route PUT /api/auth/change-password
 // ==========================================
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -223,7 +218,7 @@ const changePassword = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // MATCH CURRENT PASSWORD
+  // MATCH PASSWORD
   const isMatch = await user.matchPassword(currentPassword);
 
   if (!isMatch) {
@@ -242,7 +237,6 @@ const changePassword = asyncHandler(async (req, res) => {
 
 // ==========================================
 // MAKE ADMIN
-// @route PUT /api/auth/make-admin/:email
 // ==========================================
 const makeAdmin = asyncHandler(async (req, res) => {
   const user = await User.findOne({
