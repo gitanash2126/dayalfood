@@ -2,28 +2,42 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 
-// ==========================================
-// PROTECT ROUTES
-// ==========================================
 const protect = async (req, res, next) => {
+  let token;
+
+  // ==========================================
+  // COOKIE TOKEN
+  // ==========================================
+  if (req.cookies?.token) {
+    token = req.cookies.token;
+  }
+
+  // ==========================================
+  // HEADER TOKEN
+  // ==========================================
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  // ==========================================
+  // NO TOKEN
+  // ==========================================
+  if (!token) {
+    res.status(401);
+
+    return next(new Error("Not authorized, token missing"));
+  }
+
   try {
-    // TOKEN FROM COOKIE
-    const token = req.cookies.token;
-
-    // CHECK TOKEN
-    if (!token) {
-      res.status(401);
-
-      return next(new Error("Not authorized, token missing"));
-    }
-
-    // VERIFY TOKEN
+    // VERIFY
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // FIND USER
+    // USER
     req.user = await User.findById(decoded.id).select("-password");
 
-    // CHECK USER
     if (!req.user) {
       res.status(401);
 
@@ -41,11 +55,10 @@ const protect = async (req, res, next) => {
 };
 
 // ==========================================
-// AUTHORIZE ROLES
+// ROLE AUTH
 // ==========================================
 const authorize = (...roles) => {
   return (req, res, next) => {
-    // CHECK ROLE
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403);
 
