@@ -1,3 +1,5 @@
+const compression = require("compression");
+
 const express = require("express");
 
 const cors = require("cors");
@@ -12,12 +14,16 @@ const cookieParser = require("cookie-parser");
 
 const path = require("path");
 
+// ==========================================
 // MIDDLEWARES
+// ==========================================
 const errorHandler = require("./middlewares/errorHandler");
 
 const notFound = require("./middlewares/notFound");
 
+// ==========================================
 // ROUTES
+// ==========================================
 const authRoutes = require("./routes/authRoutes");
 
 const productRoutes = require("./routes/productRoutes");
@@ -33,6 +39,11 @@ const wishlistRoutes = require("./routes/wishlistRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
+
+// ==========================================
+// COMPRESSION
+// ==========================================
+app.use(compression());
 
 // ==========================================
 // BODY PARSER
@@ -99,11 +110,11 @@ app.use(
     saveUninitialized: false,
 
     cookie: {
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
 
       httpOnly: true,
 
-      sameSite: "lax",
+      sameSite: "none",
     },
   }),
 );
@@ -111,7 +122,17 @@ app.use(
 // ==========================================
 // STATIC UPLOADS
 // ==========================================
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use(
+  "/uploads",
+
+  express.static(
+    path.join(__dirname, "../uploads"),
+
+    {
+      maxAge: "7d",
+    },
+  ),
+);
 
 // ==========================================
 // HEALTH ROUTE

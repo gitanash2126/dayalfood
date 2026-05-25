@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import BASE_URL from "../utils/baseURL";
 
 import {
   Star,
@@ -113,7 +114,7 @@ export default function ProductDetails() {
   // IMAGE URL
   // ==========================================
   const imageUrl = product.image?.startsWith("/uploads")
-    ? `https://dayalfood-backend.onrender.com${product.image}`
+    ? `${BASE_URL}${product.image}`
     : product.image;
 
   // ==========================================

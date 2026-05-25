@@ -1,4 +1,5 @@
 import { ShoppingCart, Eye, Star } from "lucide-react";
+import BASE_URL from "../../utils/baseURL";
 
 import { Link } from "react-router-dom";
 
@@ -15,8 +16,11 @@ export default function ProductCard({ product }) {
 
   // IMAGE FIX
   const productImage = product.image?.startsWith("/uploads")
-    ? `http://localhost:5000${product.image}`
-    : product.image || "/images/default-product.jpg";
+    ? `${BASE_URL}${product.image}`
+    : productImages[product.image] ||
+      product.image ||
+      product.images?.[0] ||
+      "/images/default-product.jpg";
 
   return (
     <div className="group bg-white rounded-[32px] overflow-hidden border border-orange-100 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
