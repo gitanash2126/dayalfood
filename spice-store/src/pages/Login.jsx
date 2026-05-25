@@ -23,7 +23,9 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // ==========================================
   // LOGIN
+  // ==========================================
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -38,15 +40,29 @@ export default function Login() {
 
       console.log("LOGIN RESPONSE:", response.data);
 
+      // ==========================================
       // USER DATA
+      // ==========================================
       const user = response.data.data;
 
-      // SAVE USER
+      // ==========================================
+      // SAVE USER IN AUTH CONTEXT
+      // ==========================================
       login(user);
 
+      // ==========================================
+      // SAVE USER IN LOCAL STORAGE
+      // ==========================================
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // ==========================================
+      // SUCCESS
+      // ==========================================
       alert("Login Successful");
 
+      // ==========================================
       // ADMIN REDIRECT
+      // ==========================================
       if (user.role === "admin") {
         navigate("/admin");
       } else {

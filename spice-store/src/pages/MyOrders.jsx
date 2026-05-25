@@ -25,7 +25,7 @@ export default function MyOrders() {
 
   const fetchOrders = async () => {
     try {
-      const { data } = await API.get("/orders/myorders");
+      const { data } = await API.get("/orders/my-orders");
 
       console.log("MY ORDERS:", data);
 

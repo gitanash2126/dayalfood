@@ -14,10 +14,11 @@ const cookieOptions = {
 
   secure: process.env.NODE_ENV === "production",
 
-  sameSite: "none",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
+
 // ==========================================
 // REGISTER USER
 // ==========================================
@@ -46,7 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
     phone,
   });
 
-  // GENERATE TOKEN
+  // TOKEN
   const token = generateToken(user._id);
 
   // SET COOKIE
@@ -83,14 +84,14 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  // CHECK ACTIVE
+  // ACTIVE CHECK
   if (!user.isActive) {
     res.status(403);
 
     throw new Error("Your account is inactive");
   }
 
-  // MATCH PASSWORD
+  // PASSWORD MATCH
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
@@ -99,10 +100,10 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  // GENERATE TOKEN
+  // TOKEN
   const token = generateToken(user._id);
 
-  // SET COOKIE
+  // COOKIE
   res.cookie("token", token, cookieOptions);
 
   // RESPONSE
@@ -126,9 +127,9 @@ const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
 
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
 
-    sameSite: "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 
     expires: new Date(0),
   });
@@ -195,7 +196,6 @@ const updateProfile = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
-  // VALIDATION
   if (!currentPassword || !newPassword) {
     res.status(400);
 
@@ -208,7 +208,6 @@ const changePassword = asyncHandler(async (req, res) => {
     throw new Error("New password must be at least 6 characters");
   }
 
-  // FIND USER
   const user = await User.findById(req.user._id).select("+password");
 
   if (!user) {
@@ -217,7 +216,6 @@ const changePassword = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // MATCH PASSWORD
   const isMatch = await user.matchPassword(currentPassword);
 
   if (!isMatch) {
@@ -226,7 +224,6 @@ const changePassword = asyncHandler(async (req, res) => {
     throw new Error("Current password is incorrect");
   }
 
-  // UPDATE PASSWORD
   user.password = newPassword;
 
   await user.save();
@@ -248,7 +245,6 @@ const makeAdmin = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // UPDATE ROLE
   user.role = "admin";
 
   await user.save();

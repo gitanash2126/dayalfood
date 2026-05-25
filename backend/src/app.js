@@ -57,6 +57,7 @@ app.use(
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "10mb",
   }),
 );
 
@@ -80,6 +81,11 @@ app.use(
     credentials: true,
   }),
 );
+
+// ==========================================
+// STATIC IMAGE FOLDER
+// ==========================================
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // ==========================================
 // RATE LIMIT
@@ -117,21 +123,6 @@ app.use(
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
-);
-
-// ==========================================
-// STATIC UPLOADS
-// ==========================================
-app.use(
-  "/uploads",
-
-  express.static(
-    path.join(__dirname, "../uploads"),
-
-    {
-      maxAge: "7d",
-    },
-  ),
 );
 
 // ==========================================

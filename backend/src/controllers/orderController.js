@@ -193,14 +193,17 @@ const createOrder = asyncHandler(async (req, res) => {
 
 // ==========================================
 // GET MY ORDERS
-// GET /api/orders/myorders
+// ONLY LOGGED USER ORDERS
+// GET /api/orders/my-orders
 // ==========================================
 const getMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({
     user: req.user._id,
-  }).sort({
-    createdAt: -1,
-  });
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .populate("user", "name email");
 
   successResponse(res, 200, "My orders fetched successfully", orders);
 });
@@ -225,6 +228,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
   const isAdmin = req.user.role === "admin";
 
+  // ONLY OWNER OR ADMIN
   if (!isOwner && !isAdmin) {
     res.status(403);
 
@@ -236,6 +240,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
 // ==========================================
 // GET ALL ORDERS
+// ADMIN ONLY
 // GET /api/orders
 // ==========================================
 const getOrders = asyncHandler(async (req, res) => {
@@ -393,6 +398,9 @@ const cancelOrder = asyncHandler(async (req, res) => {
   successResponse(res, 200, "Order cancelled successfully", order);
 });
 
+// ==========================================
+// EXPORTS
+// ==========================================
 module.exports = {
   createOrder,
 

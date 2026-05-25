@@ -1,29 +1,39 @@
 import { ShoppingCart, Eye, Star } from "lucide-react";
-import BASE_URL from "../../utils/baseURL";
 
 import { Link } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
 
+import productImages from "../../utils/productImages";
+
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
 
   // PRODUCT ID
-  const productId = product._id || product.id;
+  const productId = product?._id || product?.id;
 
   // PRODUCT LINK
   const productLink = `/products/${productId}`;
 
-  // IMAGE FIX
-  const productImage = product.image?.startsWith("/uploads")
-    ? `${BASE_URL}${product.image}`
-    : productImages[product.image] ||
-      product.image ||
-      product.images?.[0] ||
-      "/images/default-product.jpg";
+  // =====================================
+  // PRODUCT IMAGE MATCHING
+  // =====================================
+
+  const productName = product?.name?.toLowerCase()?.trim() || "";
+
+  let productImage = "/images/no-image.png";
+
+  // BETTER MATCHING
+  for (const key in productImages) {
+    if (productName.includes(key)) {
+      productImage = productImages[key];
+
+      break;
+    }
+  }
 
   return (
-    <div className="group bg-white rounded-[32px] overflow-hidden border border-orange-100 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+    <div className="group bg-white rounded-[28px] overflow-hidden border border-orange-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
       {/* IMAGE */}
       <div className="relative overflow-hidden bg-[#fff8f1]">
         {/* QUICK VIEW */}
@@ -38,9 +48,12 @@ export default function ProductCard({ product }) {
         <Link to={productLink}>
           <img
             src={productImage}
-            alt={product.name}
+            alt={product?.name || "Product"}
             loading="lazy"
-            className="w-full h-[280px] object-cover group-hover:scale-110 transition duration-700"
+            className="w-full h-[280px] object-cover group-hover:scale-105 transition duration-500"
+            onError={(e) => {
+              e.target.src = "/images/no-image.png";
+            }}
           />
         </Link>
       </div>
@@ -49,19 +62,21 @@ export default function ProductCard({ product }) {
       <div className="p-6">
         {/* CATEGORY */}
         <p className="text-sm text-primary font-medium">
-          {product.category || "Premium Spice"}
+          {typeof product?.category === "object"
+            ? product.category?.name
+            : product?.category || "Premium Spice"}
         </p>
 
         {/* PRODUCT NAME */}
         <Link to={productLink}>
           <h3 className="text-2xl font-semibold text-dark mt-2 group-hover:text-primary transition">
-            {product.name}
+            {product?.name}
           </h3>
         </Link>
 
         {/* WEIGHT */}
         <p className="text-gray-500 text-sm mt-2">
-          Weight : {product.weight || "500g"}
+          Weight : {product?.weight || "500g"}
         </p>
 
         {/* RATING */}
@@ -71,7 +86,7 @@ export default function ProductCard({ product }) {
               key={star}
               size={16}
               className={`${
-                star <= Math.round(product.rating || 0)
+                star <= Math.round(product?.rating || 0)
                   ? "fill-yellow-400 text-yellow-400"
                   : "text-gray-300"
               }`}
@@ -79,13 +94,13 @@ export default function ProductCard({ product }) {
           ))}
 
           <span className="text-sm text-gray-500 ml-2">
-            ({product.rating || 0})
+            ({product?.rating || 0})
           </span>
         </div>
 
         {/* DESCRIPTION */}
         <p className="text-gray-500 leading-7 text-sm mt-4">
-          {product.description
+          {product?.description
             ? `${product.description.slice(0, 70)}...`
             : "Premium quality authentic Indian spice with rich aroma."}
         </p>
@@ -94,7 +109,7 @@ export default function ProductCard({ product }) {
         <div className="flex items-center justify-between mt-6">
           <div>
             <span className="text-2xl font-bold text-primary">
-              ₹{product.price}
+              ₹{product?.price}
             </span>
           </div>
 
