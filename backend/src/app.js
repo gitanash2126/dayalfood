@@ -71,11 +71,11 @@ app.use(cookieParser());
 app.use(helmet());
 
 // ==========================================
-// CORS
+// CORS FIX
 // ==========================================
 app.use(
   cors({
-    origin: "https://dayalfood.vercel.app",
+    origin: true,
 
     credentials: true,
   }),
@@ -114,7 +114,7 @@ app.use(
 
       httpOnly: true,
 
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
 );
