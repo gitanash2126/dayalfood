@@ -1,44 +1,35 @@
 const compression = require("compression");
-
 const express = require("express");
-
 const cors = require("cors");
-
 const helmet = require("helmet");
-
 const rateLimit = require("express-rate-limit");
-
 const session = require("express-session");
-
 const cookieParser = require("cookie-parser");
-
 const path = require("path");
 
 // ==========================================
 // MIDDLEWARES
 // ==========================================
 const errorHandler = require("./middlewares/errorHandler");
-
 const notFound = require("./middlewares/notFound");
 
 // ==========================================
 // ROUTES
 // ==========================================
 const authRoutes = require("./routes/authRoutes");
-
 const productRoutes = require("./routes/productRoutes");
-
 const cartRoutes = require("./routes/cartRoutes");
-
 const orderRoutes = require("./routes/orderRoutes");
-
 const adminRoutes = require("./routes/adminRoutes");
-
 const wishlistRoutes = require("./routes/wishlistRoutes");
-
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
+
+// ==========================================
+// TRUST PROXY
+// ==========================================
+app.set("trust proxy", 1);
 
 // ==========================================
 // COMPRESSION
@@ -69,14 +60,22 @@ app.use(cookieParser());
 // ==========================================
 // SECURITY
 // ==========================================
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+);
 
 // ==========================================
-// CORS FIX
+// CORS
 // ==========================================
 app.use(
   cors({
-    origin: true,
+    origin: [
+      "https://amritdayalspices.in",
+      "https://www.amritdayalspices.in",
+      "http://localhost:5173",
+    ],
 
     credentials: true,
   }),
@@ -85,7 +84,12 @@ app.use(
 // ==========================================
 // STATIC IMAGE FOLDER
 // ==========================================
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    maxAge: "7d",
+  }),
+);
 
 // ==========================================
 // RATE LIMIT
@@ -115,12 +119,16 @@ app.use(
 
     saveUninitialized: false,
 
+    proxy: true,
+
     cookie: {
       secure: process.env.NODE_ENV === "production",
 
       httpOnly: true,
 
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   }),
 );

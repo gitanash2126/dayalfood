@@ -2,23 +2,37 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import API from "../api/axios";
 
+import { useAuth } from "./AuthContext";
+
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
+  // ==========================================
+  // AUTH
+  // ==========================================
+  const { user } = useAuth();
+
   // ==========================================
   // STATES
   // ==========================================
   const [cartItems, setCartItems] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // ==========================================
-  // FETCH CART FROM BACKEND
+  // FETCH CART ONLY IF USER LOGGED IN
   // ==========================================
   useEffect(() => {
-    fetchCart();
-  }, []);
+    if (user) {
+      fetchCart();
+    } else {
+      setCartItems([]);
+    }
+  }, [user]);
 
+  // ==========================================
+  // FETCH CART
+  // ==========================================
   const fetchCart = async () => {
     try {
       setLoading(true);
@@ -29,7 +43,7 @@ export function CartProvider({ children }) {
 
       const items = data.data?.items || [];
 
-      // FORMAT CART
+      // FORMAT ITEMS
       const formattedItems = items.map((item) => ({
         _id: item.product?._id,
 
@@ -56,7 +70,6 @@ export function CartProvider({ children }) {
     } catch (error) {
       console.log(error);
 
-      // IGNORE 401
       if (error.response?.status !== 401) {
         alert("Failed to fetch cart");
       }
@@ -70,6 +83,13 @@ export function CartProvider({ children }) {
   // ==========================================
   const addToCart = async (product, qty = 1) => {
     try {
+      // LOGIN CHECK
+      if (!user) {
+        alert("Please login first");
+
+        return;
+      }
+
       const productId = product._id || product.id;
 
       if (!productId) {
@@ -85,7 +105,7 @@ export function CartProvider({ children }) {
         quantity: qty,
       });
 
-      // REFRESH CART
+      // REFRESH
       await fetchCart();
 
       alert("Added To Cart");
@@ -103,7 +123,6 @@ export function CartProvider({ children }) {
     try {
       await API.delete(`/cart/${productId}`);
 
-      // UPDATE UI
       setCartItems((prev) =>
         prev.filter((item) => String(item._id) !== String(productId)),
       );
@@ -127,7 +146,6 @@ export function CartProvider({ children }) {
 
       if (!item) return;
 
-      // STOCK CHECK
       if (item.quantity >= item.stock) {
         alert("Maximum stock reached");
 
@@ -136,12 +154,10 @@ export function CartProvider({ children }) {
 
       const newQty = item.quantity + 1;
 
-      // BACKEND UPDATE
       await API.put(`/cart/${productId}`, {
         quantity: newQty,
       });
 
-      // UPDATE UI
       setCartItems((prev) =>
         prev.map((item) =>
           String(item._id) === String(productId)
@@ -173,12 +189,10 @@ export function CartProvider({ children }) {
 
       const newQty = item.quantity > 1 ? item.quantity - 1 : 1;
 
-      // BACKEND UPDATE
       await API.put(`/cart/${productId}`, {
         quantity: newQty,
       });
 
-      // UPDATE UI
       setCartItems((prev) =>
         prev.map((item) =>
           String(item._id) === String(productId)
@@ -215,7 +229,7 @@ export function CartProvider({ children }) {
   };
 
   // ==========================================
-  // CART TOTAL
+  // TOTAL
   // ==========================================
   const cartTotal = cartItems.reduce(
     (total, item) =>
@@ -256,7 +270,7 @@ export function CartProvider({ children }) {
 }
 
 // ==========================================
-// CUSTOM HOOK
+// HOOK
 // ==========================================
 export function useCart() {
   return useContext(CartContext);
