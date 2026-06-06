@@ -21,7 +21,7 @@ import methi from "../assets/products/methi.jpeg";
 import mirchi from "../assets/products/mirchi.jpeg";
 import mirchipowder from "../assets/products/mirchi powder.jpeg";
 import mishritkhadamasala from "../assets/products/mishritkhadamasala.jpeg";
-import pachfodan from "../assets/products/Pachfodan.jpeg";
+import pachfodan from "../assets/products/pachfodan.jpeg";
 import rai from "../assets/products/rai.jpeg";
 import safedgolmirchi from "../assets/products/safed gol mirchi.jpeg";
 import safedmirchpowder from "../assets/products/safed mirch powder.jpeg";
