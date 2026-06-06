@@ -5,8 +5,8 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
-
 import API from "../api/axios";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function Login() {
       // ==========================================
       // SUCCESS
       // ==========================================
-      alert("Login Successful");
+      toast.success("Login Successful");
 
       // ==========================================
       // ADMIN REDIRECT
@@ -70,8 +70,7 @@ export default function Login() {
       }
     } catch (error) {
       console.log(error);
-
-      alert(error.response?.data?.message || "Login Failed");
+      toast.error(error.response?.data?.message || "Login Failed");
     } finally {
       setLoading(false);
     }

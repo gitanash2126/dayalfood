@@ -12,6 +12,8 @@ import ProductCard from "../components/products/ProductCard";
 
 import API from "../api/axios";
 
+import { groupProducts } from "../utils/productHelpers";
+
 export default function Products() {
   // MOBILE FILTER
   const [mobileFilters, setMobileFilters] = useState(false);
@@ -84,7 +86,7 @@ export default function Products() {
 
       const responseData = data.data;
 
-      setProducts(responseData.products || []);
+      setProducts(groupProducts(responseData.products || []));
 
       setTotalPages(responseData.totalPages || 1);
     } catch (error) {
@@ -101,18 +103,7 @@ export default function Products() {
     fetchProducts();
   };
 
-  // LOADING
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-[#fffdf8]">
-        <div className="text-center">
-          <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
 
-          <p className="mt-6 text-2xl font-semibold">Loading Products...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#fffdf8] min-h-screen">
@@ -259,7 +250,11 @@ export default function Products() {
 
               {/* GRID */}
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                {products.length > 0 ? (
+                {loading ? (
+                  <div className="col-span-full py-20 flex justify-center">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : products.length > 0 ? (
                   products.map((product) => (
                     <ProductCard key={product._id} product={product} />
                   ))

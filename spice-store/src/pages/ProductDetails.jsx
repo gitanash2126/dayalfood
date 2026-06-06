@@ -10,7 +10,9 @@ import { useCart } from "../context/CartContext";
 
 import API from "../api/axios";
 
-import productImages from "../utils/productImages";
+import { getProductImage } from "../utils/productImages";
+
+import { getProductBaseName } from "../utils/productHelpers";
 
 export default function ProductDetails() {
   const { slug } = useParams();
@@ -25,6 +27,10 @@ export default function ProductDetails() {
   const [product, setProduct] = useState(null);
 
   const [relatedProducts, setRelatedProducts] = useState([]);
+
+  const [variants, setVariants] = useState([]);
+  
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -58,15 +64,33 @@ export default function ProductDetails() {
 
       setProduct(productData);
 
-      // RELATED PRODUCTS
+      // RELATED PRODUCTS & VARIANTS
       try {
         const relatedRes = await API.get(`/products`);
 
-        const related = relatedRes.data.data?.products || [];
+        const allProducts = relatedRes.data.data?.products || relatedRes.data.products || [];
 
-        const filtered = related.filter((item) => item._id !== productData._id);
+        const baseName = getProductBaseName(productData.name, productData.weight);
 
-        setRelatedProducts(filtered.slice(0, 4));
+        // Use groupProducts to get properly structured variants from both old and new schema
+        const { groupProducts } = await import("../utils/productHelpers");
+        const groupedAll = groupProducts(allProducts);
+        
+        // Find the group that matches the current product baseName
+        const matchedGroup = groupedAll.find(g => g.baseName === baseName);
+
+        if (matchedGroup && matchedGroup.variants) {
+          setVariants(matchedGroup.variants);
+        } else {
+          setVariants([]);
+        }
+
+        // Filter out variants from related products
+        const filteredRelated = allProducts.filter(
+          (item) => getProductBaseName(item.name, item.weight) !== baseName
+        );
+
+        setRelatedProducts(filteredRelated.slice(0, 4));
       } catch (error) {
         console.log(error);
       }
@@ -77,13 +101,20 @@ export default function ProductDetails() {
     }
   };
 
-  // ==========================================
+  useEffect(() => {
+    if (variants.length > 0) {
+      // Find the variant that matches the currently fetched product, or fallback to first
+      const current = variants.find((v) => v._id === product?._id) || variants[0];
+      setSelectedVariant(current);
+    }
+  }, [variants, product]);
+
   // LOADING
   // ==========================================
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h2 className="text-2xl font-bold">Loading...</h2>
+      <div className="min-h-screen flex items-center justify-center bg-[#fffdf8]">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -103,24 +134,23 @@ export default function ProductDetails() {
   // PRODUCT IMAGE MATCHING
   // ==========================================
   const productName = product?.name?.toLowerCase()?.trim() || "";
-
-  let imageUrl = "/images/no-image.png";
-
-  for (const key in productImages) {
-    if (productName.includes(key)) {
-      imageUrl = productImages[key];
-
-      break;
-    }
-  }
+  const imageUrl = getProductImage(productName, product?.imageUrl || product?.image);
 
   // ==========================================
   // ADD TO CART
   // ==========================================
   const handleAddToCart = () => {
-    addToCart({
+    const toAdd = selectedVariant?.productObj || {
       ...product,
-
+      _id: selectedVariant?._id || product._id,
+      price: selectedVariant?.price || product.price,
+      sale_price: selectedVariant?.sale_price || product.sale_price || selectedVariant?.price || product.price,
+      weight: selectedVariant?.weight || product.weight,
+      stock: selectedVariant?.stock || product.stock,
+    };
+    
+    addToCart({
+      ...toAdd,
       quantity,
     });
   };
@@ -180,15 +210,48 @@ export default function ProductDetails() {
               </div>
 
               {/* PRICE */}
-              <div className="mt-8">
+              <div className="mt-8 flex items-baseline gap-4">
                 <span className="text-4xl font-bold text-primary">
-                  ₹{product.price}
+                  ₹{selectedVariant?.sale_price || selectedVariant?.price || product.price}
                 </span>
+                {variants.length === 1 && (
+                  <span className="text-gray-500 text-lg">
+                    ({selectedVariant?.weight || product.weight})
+                  </span>
+                )}
               </div>
+
+              {/* SELECT QUANTITY / WEIGHT VARIANTS */}
+              {variants.length > 1 && (
+                <div className="mt-8 bg-orange-50/20 p-6 rounded-3xl border border-orange-100/50">
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Select Pack Size</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {variants.map((v) => {
+                      const isActive = selectedVariant?._id === v._id;
+                      return (
+                        <button
+                          key={v._id}
+                          onClick={() => setSelectedVariant(v)}
+                          className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all duration-300 border flex flex-col items-center min-w-[100px] shadow-sm hover:shadow-md ${
+                            isActive
+                              ? "bg-gradient-to-br from-primary to-secondary text-white border-primary shadow-lg scale-105"
+                              : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          <span className="text-base">{v.weight}</span>
+                          <span className={`text-xs mt-1.5 font-semibold ${isActive ? "text-orange-100" : "text-gray-400"}`}>
+                            ₹{v.sale_price || v.price}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* STOCK */}
               <div className="mt-5">
-                {product.stock > 0 ? (
+                {selectedVariant?.stock > 0 || (!selectedVariant && product.stock > 0) ? (
                   <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">
                     In Stock
                   </span>

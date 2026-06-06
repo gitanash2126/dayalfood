@@ -8,7 +8,25 @@ const { successResponse } = require("../utils/apiResponse");
 // CREATE PRODUCT
 // ==========================================
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, price, category, brand, weight, description, stock } = req.body;
+  const { name, category, brand, description } = req.body;
+  
+  let price = Number(req.body.price) || 0;
+  let stock = Number(req.body.stock) || 0;
+  let weight = req.body.weight || "";
+  let variants = [];
+
+  if (req.body.variants) {
+    try {
+      variants = JSON.parse(req.body.variants);
+      if (variants.length > 0) {
+        price = Number(variants[0].price);
+        weight = variants[0].weight;
+        stock = variants.reduce((sum, v) => sum + Number(v.stock), 0);
+      }
+    } catch (error) {
+      console.log("Failed to parse variants", error);
+    }
+  }
 
   // ==========================================
   // IMAGE URL
@@ -22,21 +40,14 @@ const createProduct = asyncHandler(async (req, res) => {
   // ==========================================
   const product = await Product.create({
     name,
-
     price,
-
     category,
-
     brand,
-
     weight,
-
     description,
-
     stock,
-
-    imageUrl: image,
-
+    variants,
+    image,
     createdBy: req.user._id,
   });
 
@@ -89,7 +100,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   // UPDATE IMAGE
   // ==========================================
   if (req.file) {
-    product.imageUrl = `${req.protocol}://${req.get(
+    product.image = `${req.protocol}://${req.get(
       "host",
     )}/uploads/${req.file.filename}`;
   }
@@ -98,18 +109,28 @@ const updateProduct = asyncHandler(async (req, res) => {
   // UPDATE FIELDS
   // ==========================================
   product.name = req.body.name || product.name;
-
-  product.price = req.body.price || product.price;
-
   product.category = req.body.category || product.category;
-
   product.brand = req.body.brand || product.brand;
-
-  product.weight = req.body.weight || product.weight;
-
   product.description = req.body.description || product.description;
 
-  product.stock = req.body.stock || product.stock;
+  if (req.body.variants) {
+    try {
+      const parsedVariants = JSON.parse(req.body.variants);
+      product.variants = parsedVariants;
+      if (parsedVariants.length > 0) {
+        product.price = Number(parsedVariants[0].price);
+        product.weight = parsedVariants[0].weight;
+        product.stock = parsedVariants.reduce((sum, v) => sum + Number(v.stock), 0);
+      }
+    } catch (error) {
+      console.log("Failed to parse variants", error);
+    }
+  } else {
+    // Fallback if no variants provided
+    product.price = req.body.price ? Number(req.body.price) : product.price;
+    product.weight = req.body.weight || product.weight;
+    product.stock = req.body.stock ? Number(req.body.stock) : product.stock;
+  }
 
   // ==========================================
   // SAVE

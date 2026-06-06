@@ -23,6 +23,7 @@ import {
 } from "recharts";
 
 import API from "../../api/axios";
+import { productImages, getProductImage } from "../../utils/productImages";
 
 export default function AdminDashboard() {
   // STATES
@@ -41,26 +42,19 @@ export default function AdminDashboard() {
     fetchDashboard();
   }, []);
 
+
   const fetchDashboard = async () => {
     try {
-      // STATS
-      const statsRes = await API.get("/admin/stats");
-
-      // ORDERS
-      const ordersRes = await API.get("/admin/recent-orders");
-
-      // LOW STOCK
-      const lowStockRes = await API.get("/admin/low-stock-products");
-
-      // ANALYTICS
-      const analyticsRes = await API.get("/admin/analytics");
+      const [statsRes, ordersRes, lowStockRes, analyticsRes] = await Promise.all([
+        API.get("/admin/stats"),
+        API.get("/admin/recent-orders"),
+        API.get("/admin/low-stock-products"),
+        API.get("/admin/analytics")
+      ]);
 
       setStats(statsRes.data.data);
-
       setRecentOrders(ordersRes.data.data || []);
-
       setLowStock(lowStockRes.data.data || []);
-
       setAnalytics(analyticsRes.data.data);
     } catch (error) {
       console.log(error);
@@ -225,26 +219,26 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-3xl shadow-lg p-8 mt-10">
         <h2 className="text-3xl font-bold mb-10">Monthly Sales</h2>
 
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={
-                analytics?.monthlySales?.map((item) => ({
+        <div className="h-[400px] w-full min-h-[400px]">
+          {analytics?.monthlySales && analytics.monthlySales.length > 0 ? (
+            <ResponsiveContainer width="99%" height="100%" minHeight={400}>
+              <BarChart
+                data={analytics.monthlySales.map((item) => ({
                   month: `Month ${item._id.month}`,
-
                   sales: item.totalSales,
-                })) || []
-              }
-            >
-              <XAxis dataKey="month" />
-
-              <YAxis />
-
-              <Tooltip />
-
-              <Bar dataKey="sales" />
-            </BarChart>
-          </ResponsiveContainer>
+                }))}
+              >
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="sales" fill="#f97316" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+             <div className="h-full flex items-center justify-center text-gray-500 font-medium">
+               No sales data available for the chart.
+             </div>
+          )}
         </div>
       </div>
 
@@ -297,38 +291,41 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-5">
-            {lowStock.slice(0, 5).map((product) => (
-              <div
-                key={product._id}
-                className="flex items-center justify-between bg-[#f8f4e8] rounded-2xl p-5"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={
-                      product.image?.startsWith("/uploads")
-                        ? `http://localhost:5000${product.image}`
-                        : product.image
-                    }
-                    alt={product.name}
-                    className="w-16 h-16 rounded-xl object-cover"
-                  />
+            {lowStock.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                All products are fully stocked!
+              </div>
+            ) : (
+              lowStock.slice(0, 5).map((product) => (
+                <div
+                  key={product._id}
+                  className="flex items-center justify-between bg-[#f8f4e8] rounded-2xl p-5"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={getProductImage(product.name, product.image)}
+                      alt={product.name}
+                      className="w-16 h-16 rounded-xl object-cover bg-white"
+                      onError={(e) => { e.target.src = "/images/no-image.png"; }}
+                    />
 
-                  <div>
-                    <h3 className="font-bold text-lg">{product.name}</h3>
+                    <div>
+                      <h3 className="font-bold text-lg">{product.name}</h3>
 
-                    <p className="text-gray-500 mt-1">₹{product.price}</p>
+                      <p className="text-gray-500 mt-1">₹{product.price}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-red-500 font-bold text-2xl">
+                      {product.stock}
+                    </p>
+
+                    <p className="text-sm text-gray-500 mt-1">Remaining</p>
                   </div>
                 </div>
-
-                <div className="text-right">
-                  <p className="text-red-500 font-bold text-2xl">
-                    {product.stock}
-                  </p>
-
-                  <p className="text-sm text-gray-500 mt-1">Remaining</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -345,13 +342,10 @@ export default function AdminDashboard() {
             >
               <div className="flex items-center gap-5">
                 <img
-                  src={
-                    product.image?.startsWith("/uploads")
-                      ? `http://localhost:5000${product.image}`
-                      : product.image
-                  }
+                  src={getProductImage(product.name, product.image)}
                   alt={product.name}
-                  className="w-20 h-20 rounded-2xl object-cover"
+                  className="w-20 h-20 rounded-2xl object-cover bg-white"
+                  onError={(e) => { e.target.src = "/images/no-image.png"; }}
                 />
 
                 <div>

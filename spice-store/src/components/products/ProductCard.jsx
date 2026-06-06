@@ -2,15 +2,43 @@ import { ShoppingCart, Eye, Star } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
+import { useState, useEffect } from "react";
+
 import { useCart } from "../../context/CartContext";
 
-import productImages from "../../utils/productImages";
+import { productImages, getProductImage } from "../../utils/productImages";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
 
-  // PRODUCT ID
-  const productId = product?._id || product?.id;
+  // Establish variants list (either from grouped product or fall back to single variant)
+  const variants = product?.variants && product.variants.length > 0
+    ? product.variants
+    : [
+        {
+          _id: product?._id || product?.id,
+          name: product?.name,
+          weight: product?.weight || "500g",
+          price: product?.price,
+          sale_price: product?.sale_price || product?.price,
+          stock: product?.stock || 0,
+          image: product?.image || product?.imageUrl,
+        },
+      ];
+
+  // Selected variant state
+  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+
+  // Sync selected variant if product changes
+  useEffect(() => {
+    if (variants.length > 0) {
+      setSelectedVariant(variants[0]);
+    }
+  }, [product]);
+
+  // PRODUCT ID of the active variant
+  const rawId = selectedVariant?._id || product?._id || product?.id;
+  const productId = typeof rawId === "string" ? rawId.split("-")[0] : rawId;
 
   // PRODUCT LINK
   const productLink = `/products/${productId}`;
@@ -18,19 +46,7 @@ export default function ProductCard({ product }) {
   // =====================================
   // PRODUCT IMAGE MATCHING
   // =====================================
-
-  const productName = product?.name?.toLowerCase()?.trim() || "";
-
-  let productImage = "/images/no-image.png";
-
-  // BETTER MATCHING
-  for (const key in productImages) {
-    if (productName.includes(key)) {
-      productImage = productImages[key];
-
-      break;
-    }
-  }
+  const productImage = getProductImage(product?.name, product?.image || product?.imageUrl);
 
   return (
     <div className="group bg-white rounded-[28px] overflow-hidden border border-orange-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
@@ -74,10 +90,35 @@ export default function ProductCard({ product }) {
           </h3>
         </Link>
 
-        {/* WEIGHT */}
-        <p className="text-gray-500 text-sm mt-2">
-          Weight : {product?.weight || "500g"}
-        </p>
+        {/* QUANTITY */}
+        {variants.length > 1 ? (
+          <div className="mt-4">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Select Quantity:</span>
+            <div className="flex flex-wrap gap-2">
+              {variants.map((v) => {
+                const isSelected = v._id === selectedVariant?._id;
+                return (
+                  <button
+                    type="button"
+                    key={v._id}
+                    onClick={() => setSelectedVariant(v)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 border ${
+                      isSelected
+                        ? "bg-primary text-white border-primary shadow-md scale-105"
+                        : "bg-[#fffdf8] text-gray-600 border-orange-100 hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {v.weight}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm mt-2">
+            Quantity : {selectedVariant?.weight || "500g"}
+          </p>
+        )}
 
         {/* RATING */}
         <div className="flex items-center gap-1 mt-4">
@@ -109,13 +150,24 @@ export default function ProductCard({ product }) {
         <div className="flex items-center justify-between mt-6">
           <div>
             <span className="text-2xl font-bold text-primary">
-              ₹{product?.price}
+              ₹{selectedVariant?.sale_price || selectedVariant?.price || 0}
             </span>
           </div>
 
           {/* ADD TO CART */}
           <button
-            onClick={() => addToCart(product)}
+            onClick={() => {
+              const toAdd = selectedVariant?.productObj || {
+                ...product,
+                _id: selectedVariant?._id,
+                id: selectedVariant?._id,
+                price: selectedVariant?.price,
+                sale_price: selectedVariant?.sale_price || selectedVariant?.price,
+                weight: selectedVariant?.weight,
+                stock: selectedVariant?.stock,
+              };
+              addToCart(toAdd);
+            }}
             className="bg-primary hover:bg-secondary text-white p-4 rounded-2xl transition duration-300 shadow-lg hover:scale-105"
           >
             <ShoppingCart size={20} />

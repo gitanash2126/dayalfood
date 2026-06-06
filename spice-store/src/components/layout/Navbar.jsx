@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/products/logo.jpeg";
 
 import { useCart } from "../../context/CartContext";
+import CartSidebar from "../cart/CartSidebar";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -278,148 +279,8 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* OVERLAY */}
-      {cartOpen && (
-        <div
-          onClick={() => setCartOpen(false)}
-          className="fixed inset-0 bg-black/40 z-40"
-        />
-      )}
-
       {/* CART SIDEBAR */}
-      <div
-        className={`fixed top-0 right-0 h-screen w-full sm:w-[430px] bg-white z-50 shadow-2xl transition-all duration-300 flex flex-col ${
-          cartOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* HEADER */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-2xl font-bold">Shopping Cart</h2>
-
-            <p className="text-gray-500">{cartItems.length} Items</p>
-          </div>
-
-          <button
-            onClick={() => setCartOpen(false)}
-            className="bg-[#fff8f1] p-3 rounded-xl"
-          >
-            <X size={22} />
-          </button>
-        </div>
-
-        {/* EMPTY */}
-        {cartItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-            <ShoppingCart size={60} className="text-primary" />
-
-            <h3 className="text-2xl font-semibold mt-6">Cart Is Empty</h3>
-
-            <p className="text-gray-500 mt-3">Add products to your cart.</p>
-
-            <button
-              onClick={() => setCartOpen(false)}
-              className="mt-8 bg-primary text-white px-8 py-4 rounded-2xl"
-            >
-              Continue Shopping
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* ITEMS */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              {cartItems.map((item) => {
-                const itemId = item._id || item.id;
-
-                const itemPrice = Number(item.sale_price || item.price || 0);
-
-                return (
-                  <div
-                    key={itemId}
-                    className="flex gap-4 border rounded-3xl p-4"
-                  >
-                    {/* IMAGE */}
-                    <img
-                      src={
-                        item.image
-                          ? item.image.startsWith("/uploads")
-                            ? `http://localhost:5000${item.image}`
-                            : item.image
-                          : "https://via.placeholder.com/300x300?text=No+Image"
-                      }
-                      alt={item.name}
-                      className="w-24 h-24 rounded-2xl object-cover bg-[#fff8f1]"
-                    />
-
-                    {/* INFO */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
-
-                      <p className="text-gray-500">{item.weight}</p>
-
-                      <p className="text-primary font-bold text-2xl mt-2">
-                        ₹{itemPrice}
-                      </p>
-
-                      {/* QUANTITY */}
-                      <div className="flex items-center gap-3 mt-4">
-                        <button
-                          onClick={() => decreaseQuantity(itemId)}
-                          className="bg-[#fff8f1] p-2 rounded-xl"
-                        >
-                          <Minus size={16} />
-                        </button>
-
-                        <span className="font-bold text-lg">
-                          {item.quantity}
-                        </span>
-
-                        <button
-                          onClick={() => increaseQuantity(itemId)}
-                          className="bg-[#fff8f1] p-2 rounded-xl"
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* DELETE */}
-                    <button
-                      onClick={() => removeFromCart(itemId)}
-                      className="text-red-500 h-fit"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* FOOTER */}
-            <div className="border-t p-6">
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-2xl font-bold">Total</span>
-
-                <span className="text-3xl font-bold text-primary">
-                  ₹{Number(cartTotal || 0).toFixed(0)}
-                </span>
-              </div>
-
-              {/* CHECKOUT */}
-              <button
-                onClick={() => {
-                  setCartOpen(false);
-
-                  navigate("/checkout");
-                }}
-                className="w-full bg-primary hover:bg-secondary text-white py-4 rounded-2xl font-semibold transition"
-              >
-                Proceed To Checkout
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <CartSidebar isOpen={cartOpen} setIsOpen={setCartOpen} />
     </>
   );
 }

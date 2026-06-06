@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 import API from "../api/axios";
 
@@ -71,7 +72,7 @@ export function CartProvider({ children }) {
       console.log(error);
 
       if (error.response?.status !== 401) {
-        alert("Failed to fetch cart");
+        toast.error("Failed to fetch cart");
       }
     } finally {
       setLoading(false);
@@ -85,16 +86,14 @@ export function CartProvider({ children }) {
     try {
       // LOGIN CHECK
       if (!user) {
-        alert("Please login first");
-
+        toast.error("Please login first");
         return;
       }
 
       const productId = product._id || product.id;
 
       if (!productId) {
-        alert("Product ID missing");
-
+        toast.error("Product ID missing");
         return;
       }
 
@@ -105,14 +104,15 @@ export function CartProvider({ children }) {
         quantity: qty,
       });
 
-      // REFRESH
-      await fetchCart();
+      // Show toast immediately so it feels fast
+      toast.success("Added to Cart!");
 
-      alert("Added To Cart");
+      // Refresh in background
+      fetchCart();
     } catch (error) {
       console.log(error);
 
-      alert(error.response?.data?.message || "Add To Cart Failed");
+      toast.error(error.response?.data?.message || "Add To Cart Failed");
     }
   };
 
@@ -121,17 +121,18 @@ export function CartProvider({ children }) {
   // ==========================================
   const removeFromCart = async (productId) => {
     try {
-      await API.delete(`/cart/${productId}`);
-
+      // Optimistic Update
       setCartItems((prev) =>
         prev.filter((item) => String(item._id) !== String(productId)),
       );
+      toast.success("Item Removed");
 
-      alert("Item Removed");
+      // Background API call
+      await API.delete(`/cart/${productId}`);
     } catch (error) {
       console.log(error);
-
-      alert(error.response?.data?.message || "Remove Failed");
+      toast.error(error.response?.data?.message || "Remove Failed");
+      fetchCart(); // Rollback if failed
     }
   };
 
@@ -147,17 +148,13 @@ export function CartProvider({ children }) {
       if (!item) return;
 
       if (item.quantity >= item.stock) {
-        alert("Maximum stock reached");
-
+        toast.error("Maximum stock reached");
         return;
       }
 
       const newQty = item.quantity + 1;
 
-      await API.put(`/cart/${productId}`, {
-        quantity: newQty,
-      });
-
+      // Optimistic Update
       setCartItems((prev) =>
         prev.map((item) =>
           String(item._id) === String(productId)
@@ -169,10 +166,15 @@ export function CartProvider({ children }) {
             : item,
         ),
       );
+
+      // Background API call
+      await API.put(`/cart/${productId}`, {
+        quantity: newQty,
+      });
     } catch (error) {
       console.log(error);
-
-      alert("Failed to update quantity");
+      toast.error("Failed to update quantity");
+      fetchCart(); // Rollback if failed
     }
   };
 
@@ -189,10 +191,7 @@ export function CartProvider({ children }) {
 
       const newQty = item.quantity > 1 ? item.quantity - 1 : 1;
 
-      await API.put(`/cart/${productId}`, {
-        quantity: newQty,
-      });
-
+      // Optimistic Update
       setCartItems((prev) =>
         prev.map((item) =>
           String(item._id) === String(productId)
@@ -204,10 +203,15 @@ export function CartProvider({ children }) {
             : item,
         ),
       );
+
+      // Background API call
+      await API.put(`/cart/${productId}`, {
+        quantity: newQty,
+      });
     } catch (error) {
       console.log(error);
-
-      alert("Failed to update quantity");
+      toast.error("Failed to update quantity");
+      fetchCart(); // Rollback if failed
     }
   };
 
@@ -216,15 +220,14 @@ export function CartProvider({ children }) {
   // ==========================================
   const clearCart = async () => {
     try {
-      await API.delete("/cart");
-
       setCartItems([]);
+      toast.success("Cart Cleared");
 
-      alert("Cart Cleared");
+      await API.delete("/cart");
     } catch (error) {
       console.log(error);
-
-      alert("Failed to clear cart");
+      toast.error("Failed to clear cart");
+      fetchCart();
     }
   };
 

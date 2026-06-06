@@ -8,30 +8,32 @@ import ProductCard from "../components/products/ProductCard";
 
 import API from "../api/axios";
 
+import { groupProducts } from "../utils/productHelpers";
+
+import heroImg from "../assets/products/mishritkhadamasala.jpeg";
+import offerImg from "../assets/products/badiilaichi.jpeg";
+import wholeSpicesImg from "../assets/products/khadamasala.jpeg";
+import groundSpicesImg from "../assets/products/haldi.jpeg";
+import masalaBlendsImg from "../assets/products/garammasala.jpeg";
+import seedsImg from "../assets/products/jeera.jpeg";
+
 // CATEGORIES
 const categories = [
   {
     name: "Whole Spices",
-
-    image: "https://images.pexels.com/photos/4198019/pexels-photo-4198019.jpeg",
+    image: wholeSpicesImg,
   },
-
   {
     name: "Ground Spices",
-
-    image: "https://images.pexels.com/photos/4197445/pexels-photo-4197445.jpeg",
+    image: groundSpicesImg,
   },
-
   {
     name: "Masala Blends",
-
-    image: "https://images.pexels.com/photos/6072093/pexels-photo-6072093.jpeg",
+    image: masalaBlendsImg,
   },
-
   {
     name: "Seeds",
-
-    image: "https://images.pexels.com/photos/6941026/pexels-photo-6941026.jpeg",
+    image: seedsImg,
   },
 ];
 
@@ -51,7 +53,7 @@ export default function Home() {
 
       console.log("Products API:", data);
 
-      setProducts(data.products || data.data?.products || []);
+      setProducts(groupProducts(data.products || data.data?.products || []));
     } catch (error) {
       console.log(error);
     } finally {
@@ -59,18 +61,7 @@ export default function Home() {
     }
   };
 
-  // LOADING
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-[#fffdf8]">
-        <div className="text-center">
-          <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
 
-          <p className="mt-6 text-2xl font-semibold">Loading Products...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="overflow-hidden bg-[#fffdf8]">
@@ -144,7 +135,7 @@ export default function Home() {
               {/* MAIN IMAGE */}
               <div className="relative rounded-[40px] overflow-hidden shadow-2xl border border-orange-100">
                 <img
-                  src="https://images.pexels.com/photos/678414/pexels-photo-678414.jpeg"
+                  src={heroImg}
                   alt="Indian Spices"
                   className="w-full h-[600px] object-cover hover:scale-105 transition duration-700"
                 />
@@ -250,7 +241,11 @@ export default function Home() {
 
           {/* PRODUCTS */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.length > 0 ? (
+            {loading ? (
+              <div className="col-span-full py-12 flex justify-center">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : products.length > 0 ? (
               products
                 .slice(0, 8)
                 .map((product) => (
@@ -310,7 +305,7 @@ export default function Home() {
             {/* RIGHT */}
             <div className="relative">
               <img
-                src="https://images.pexels.com/photos/4197445/pexels-photo-4197445.jpeg"
+                src={offerImg}
                 alt="Offer"
                 className="rounded-[40px] h-[500px] w-full object-cover shadow-2xl"
               />
