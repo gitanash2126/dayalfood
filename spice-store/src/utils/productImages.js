@@ -19,7 +19,7 @@ import magrail from "../assets/products/magrail.jpeg";
 import methi from "../assets/products/methi.jpg";
 import mirchipowder from "../assets/products/mirchi powder.jpeg";
 import mishritkhadamasala from "../assets/products/mishritkhadamasala.jpeg";
-import pachfodan from "../assets/products/Pachfodan.jpeg";
+import pachfodan from "../assets/products/pachfodan.jpeg";
 import rai from "../assets/products/Rai.jpg";
 import safedgolmirchi from "../assets/products/safed gol mirchi.jpeg";
 import safedmirchpowder from "../assets/products/safed mirch powder.jpeg";
@@ -29,7 +29,7 @@ import shahjeera from "../assets/products/shahjeera.jpeg";
 import starfool from "../assets/products/starfool.jpeg";
 import yellowmustard from "../assets/products/yellowmustard.jpeg";
 
-import bhunaJeeraPowder from "../assets/products/Bhuna Jeera Powder.jpg";
+import bhunaJeeraPowder from "../assets/products/Bhuna Jeera Powder.JPG";
 import chatMasala from "../assets/products/Chat Masala.JPG";
 import dhaniyaWhole from "../assets/products/Dhania whole.JPG";
 import haldiJpg from "../assets/products/Haldi.JPG";
