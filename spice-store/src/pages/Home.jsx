@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Truck, Leaf, BadgeCheck, ArrowRight } from "lucide-react";
 
 import ProductCard from "../components/products/ProductCard";
+import ProductSkeleton from "../components/products/ProductSkeleton";
 
 import API from "../api/axios";
 
@@ -51,7 +52,7 @@ export default function Home() {
     try {
       const { data } = await API.get("/products");
 
-      console.log("Products API:", data);
+      console.log("Featured Products API:", data);
 
       setProducts(groupProducts(data.products || data.data?.products || []));
     } catch (error) {
@@ -242,9 +243,9 @@ export default function Home() {
           {/* PRODUCTS */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {loading ? (
-              <div className="col-span-full py-12 flex justify-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
+              Array.from({ length: 8 }).map((_, idx) => (
+                <ProductSkeleton key={idx} />
+              ))
             ) : products.length > 0 ? (
               products
                 .slice(0, 8)

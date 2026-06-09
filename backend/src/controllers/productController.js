@@ -58,14 +58,55 @@ const createProduct = asyncHandler(async (req, res) => {
 // GET ALL PRODUCTS
 // ==========================================
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({
-    isActive: true,
-  }).sort({
-    createdAt: -1,
-  });
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const skip = (page - 1) * limit;
+
+  let query = { isActive: true };
+
+  // 1. Keyword search
+  if (req.query.keyword) {
+    query.name = {
+      $regex: req.query.keyword,
+      $options: "i",
+    };
+  }
+
+  // 2. Category filter
+  if (req.query.category && req.query.category !== "All") {
+    query.category = req.query.category;
+  }
+
+  // 3. Max Price filter
+  if (req.query.maxPrice) {
+    query.price = { $lte: Number(req.query.maxPrice) };
+  }
+
+  // 4. Sort logic
+  let sortObj = { createdAt: -1 };
+  if (req.query.sort) {
+    if (req.query.sort === "price-low") {
+      sortObj = { price: 1 };
+    } else if (req.query.sort === "price-high") {
+      sortObj = { price: -1 };
+    } else if (req.query.sort === "rating") {
+      sortObj = { rating: -1 };
+    }
+  }
+
+  const products = await Product.find(query)
+    .sort(sortObj)
+    .skip(skip)
+    .limit(limit);
+
+  const totalProducts = await Product.countDocuments(query);
+  const totalPages = Math.ceil(totalProducts / limit) || 1;
 
   successResponse(res, 200, "Products fetched successfully", {
     products,
+    totalPages,
+    currentPage: page,
+    totalProducts,
   });
 });
 

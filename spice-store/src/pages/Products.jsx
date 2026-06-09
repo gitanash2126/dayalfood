@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import ProductCard from "../components/products/ProductCard";
+import ProductSkeleton from "../components/products/ProductSkeleton";
 
 import API from "../api/axios";
 
@@ -60,7 +61,7 @@ export default function Products() {
     try {
       setLoading(true);
 
-      let url = `/products?page=${currentPage}&limit=9`;
+      let url = `/products?page=${currentPage}&limit=100`;
 
       // SEARCH
       if (searchTerm.trim()) {
@@ -249,11 +250,11 @@ export default function Products() {
               </div>
 
               {/* GRID */}
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8 animate-fade-in-up">
                 {loading ? (
-                  <div className="col-span-full py-20 flex justify-center">
-                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  </div>
+                  Array.from({ length: 9 }).map((_, idx) => (
+                    <ProductSkeleton key={idx} />
+                  ))
                 ) : products.length > 0 ? (
                   products.map((product) => (
                     <ProductCard key={product._id} product={product} />
@@ -271,31 +272,7 @@ export default function Products() {
                 )}
               </div>
 
-              {/* PAGINATION */}
-              <div className="flex justify-center items-center gap-4 mt-16">
-                {/* PREV */}
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
-                  className="bg-white border border-orange-100 hover:bg-primary hover:text-white w-14 h-14 rounded-2xl flex items-center justify-center transition disabled:opacity-50"
-                >
-                  <ChevronLeft size={22} />
-                </button>
-
-                {/* PAGE */}
-                <div className="bg-primary text-white px-8 py-4 rounded-2xl font-semibold shadow-lg">
-                  Page {currentPage} of {totalPages}
-                </div>
-
-                {/* NEXT */}
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="bg-white border border-orange-100 hover:bg-primary hover:text-white w-14 h-14 rounded-2xl flex items-center justify-center transition disabled:opacity-50"
-                >
-                  <ChevronRight size={22} />
-                </button>
-              </div>
+              {/* PAGINATION REMOVED */}
             </div>
           </div>
         </div>

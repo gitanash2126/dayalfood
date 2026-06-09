@@ -7,7 +7,6 @@ import clove from "../assets/products/clove.jpeg";
 import dhaniya from "../assets/products/dhaniya.jpeg";
 import garammasala from "../assets/products/garammasala.jpeg";
 import haldi from "../assets/products/haldi.jpeg";
-import hing from "../assets/products/hing.jpeg";
 import jaifal from "../assets/products/jaifal.jpeg";
 import javitri from "../assets/products/javitri.jpeg";
 import jeera from "../assets/products/jeera.jpeg";
@@ -17,12 +16,11 @@ import kalimirchi from "../assets/products/kalimirchi.jpeg";
 import kalimirchipowder from "../assets/products/kalimirchipowder.jpeg";
 import khadamasala from "../assets/products/khadamasala.jpeg";
 import magrail from "../assets/products/magrail.jpeg";
-import methi from "../assets/products/methi.jpeg";
-import mirchi from "../assets/products/mirchi.jpeg";
+import methi from "../assets/products/methi.jpg";
 import mirchipowder from "../assets/products/mirchi powder.jpeg";
 import mishritkhadamasala from "../assets/products/mishritkhadamasala.jpeg";
-import pachfodan from "../assets/products/pachfodan.jpeg";
-import rai from "../assets/products/rai.jpeg";
+import pachfodan from "../assets/products/Pachfodan.jpeg";
+import rai from "../assets/products/Rai.jpg";
 import safedgolmirchi from "../assets/products/safed gol mirchi.jpeg";
 import safedmirchpowder from "../assets/products/safed mirch powder.jpeg";
 import saunf from "../assets/products/saunf.jpeg";
@@ -31,11 +29,12 @@ import shahjeera from "../assets/products/shahjeera.jpeg";
 import starfool from "../assets/products/starfool.jpeg";
 import yellowmustard from "../assets/products/yellowmustard.jpeg";
 
-import bhunaJeeraPowder from "../assets/products/Bhuna Jeera Powder.JPG";
+import bhunaJeeraPowder from "../assets/products/Bhuna Jeera Powder.jpg";
 import chatMasala from "../assets/products/Chat Masala.JPG";
 import dhaniyaWhole from "../assets/products/Dhania whole.JPG";
 import haldiJpg from "../assets/products/Haldi.JPG";
-import hingJpg from "../assets/products/Hing.JPG";
+import hingPremium from "../assets/products/Hing Premium Box.JPG";
+import compoundingHing from "../assets/products/Compunding Hing.jpg";
 import kachoriAtta from "../assets/products/Kachori Atta.JPG";
 import kalaungiMasala from "../assets/products/Kalaungi Masala.JPG";
 import kaliMirchPowderJpg from "../assets/products/Kali Mirch Powder.JPG";
@@ -53,53 +52,82 @@ export const productImages = {
   "choti ilaichi": chotiilaichi,
   clove: clove,
   dhaniya: dhaniya,
+  "dhaniya powder": dhaniya,
   "dhaniya whole": dhaniyaWhole,
   "dhania whole": dhaniyaWhole, // alias
 
   "garam masala": garammasala,
   haldi: haldiJpg,
-  hing: hingJpg,
+  
+  "hing premium box": hingPremium,
+  "hing premium": hingPremium,
+  "compunding hing": compoundingHing,
+  "compounding hing": compoundingHing,
+
   jaifal: jaifal,
   javitri: javitri,
   jeera: jeera,
   "jeera 2": jeera2,
   "kabab chini": kababchini,
+  
   "kali mirchi": kalimirchi,
   "kali mirch whole": kaliMirchWhole,
   "kali mirch": kaliMirchWhole, // alias
+  
   "kali mirchi powder": kaliMirchPowderJpg,
   "kali mirch powder": kaliMirchPowderJpg, // alias
+  
   "kalaungi masala": kalaungiMasala,
   "kalongi masala": kalaungiMasala, // alias
+  
   "khada masala": khadaMasalaJpg,
+  
   magrail: magrail,
+  mangrail: magrail, // IMPORTANT for mapping DB
+  
   methi: methi,
-  mirchi: mirchi,
-  "mirchi powder": mirchipowder,
+  
+  "mirchi powder": lalMirchPowder, // User asked to fix mirchi powder image
+  "mirch powder": lalMirchPowder,
+  "lal mirch powder": lalMirchPowder,
+  "lal mirch": lalMirchPowder,
+
   "mishrit khada masala": mishritkhadamasala,
+  
   "pach fodan": pachfodan,
   "pachfodan": pachfodan, // alias
+  
   rai: rai,
+  
   "sabzi masala": sabziMasala,
   "sabji masala": sabziMasala, // alias
+  
+  "safed gol mirch": safedgolmirchi,
   "safed gol mirchi": safedgolmirchi,
+  
   "safed mirch powder": safedmirchpowder,
+  "safed mirch powder premium": safedmirchpowder,
+  
   saunf: saunf,
   "saunf mahin": saunfmahin,
   "sauff": saunf, // alias
+  
   "shah jeera": shahjeera,
+  
   "star phool": starfool,
   "starfool": starfool, // alias
+  
   "yellow mustard": yellowmustard,
 
+  "bhuna jeera powder": bhunaJeeraPowder,
   "bhuna jeera": bhunaJeeraPowder,
+  
   "chat masala": chatMasala,
-  "dhaniya powder": dhaniya, // using standard dhaniya for powder if needed
+  
   "kachori atta": kachoriAtta,
   "kachodi atta": kachoriAtta, // alias
   "kachori": kachoriAtta, // alias
-  "lal mirch powder": lalMirchPowder,
-  "lal mirch": lalMirchPowder,
+  
   "posto dana": postodana,
 };
 
