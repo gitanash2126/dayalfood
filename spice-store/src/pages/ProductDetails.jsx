@@ -158,7 +158,7 @@ export default function ProductDetails() {
   return (
     <div className="bg-[#fffdf8] overflow-hidden">
       {/* PRODUCT */}
-      <section className="py-10 sm:py-14 lg:py-20">
+      <section className="py-6 sm:py-10 lg:py-12">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
             {/* IMAGE */}
@@ -168,7 +168,7 @@ export default function ProductDetails() {
                   src={imageUrl}
                   alt={product?.name}
                   loading="lazy"
-                  className="w-full h-[320px] sm:h-[420px] lg:h-[550px] object-cover hover:scale-105 transition duration-500"
+                  className="w-full h-[250px] sm:h-[350px] lg:h-[450px] object-cover hover:scale-105 transition duration-500"
                   onError={(e) => {
                     e.target.src = "/images/no-image.png";
                   }}
@@ -186,7 +186,7 @@ export default function ProductDetails() {
               </p>
 
               {/* NAME */}
-              <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-dark mt-3 leading-tight">
+              <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark mt-2 leading-tight">
                 {product.name}
               </h1>
 
@@ -210,8 +210,8 @@ export default function ProductDetails() {
               </div>
 
               {/* PRICE */}
-              <div className="mt-8 flex items-baseline gap-4">
-                <span className="text-4xl font-bold text-primary">
+              <div className="mt-6 flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-primary">
                   ₹{selectedVariant?.sale_price || selectedVariant?.price || product.price}
                 </span>
                 {variants.length === 1 && (
@@ -223,16 +223,16 @@ export default function ProductDetails() {
 
               {/* SELECT QUANTITY / WEIGHT VARIANTS */}
               {variants.length > 1 && (
-                <div className="mt-8 bg-orange-50/20 p-6 rounded-3xl border border-orange-100/50">
-                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Select Pack Size</h3>
-                  <div className="flex flex-wrap gap-3">
+                <div className="mt-6 bg-orange-50/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-orange-100/50">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Select Pack Size</h3>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {variants.map((v) => {
                       const isActive = selectedVariant?._id === v._id;
                       return (
                         <button
                           key={v._id}
                           onClick={() => setSelectedVariant(v)}
-                          className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all duration-300 border flex flex-col items-center min-w-[100px] shadow-sm hover:shadow-md ${
+                          className={`px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all duration-300 border flex flex-col items-center min-w-[80px] sm:min-w-[100px] shadow-sm hover:shadow-md ${
                             isActive
                               ? "bg-gradient-to-br from-primary to-secondary text-white border-primary shadow-lg scale-105"
                               : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
@@ -272,34 +272,34 @@ export default function ProductDetails() {
               </div>
 
               {/* QUANTITY */}
-              <div className="mt-10">
-                <div className="flex items-center border border-orange-100 rounded-2xl overflow-hidden w-fit">
+              <div className="mt-8">
+                <div className="flex items-center border border-orange-100 rounded-xl sm:rounded-2xl overflow-hidden w-fit">
                   <button
                     onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                    className="px-5 py-4 hover:bg-orange-50"
+                    className="px-4 py-3 sm:px-5 sm:py-4 hover:bg-orange-50"
                   >
-                    <Minus size={18} />
+                    <Minus size={16} className="sm:w-[18px]" />
                   </button>
 
-                  <span className="px-7 font-semibold text-lg">{quantity}</span>
+                  <span className="px-5 sm:px-7 font-semibold text-base sm:text-lg">{quantity}</span>
 
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="px-5 py-4 hover:bg-orange-50"
+                    className="px-4 py-3 sm:px-5 sm:py-4 hover:bg-orange-50"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} className="sm:w-[18px]" />
                   </button>
                 </div>
               </div>
 
               {/* BUTTONS */}
-              <div className="flex flex-col sm:flex-row gap-5 mt-12">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-8">
                 {/* ADD TO CART */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex items-center justify-center gap-3 bg-primary hover:bg-secondary text-white px-10 py-5 rounded-2xl font-semibold transition shadow-xl"
+                  className="flex items-center justify-center gap-2 sm:gap-3 bg-primary hover:bg-secondary text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition shadow-md sm:shadow-xl text-sm sm:text-base"
                 >
-                  <ShoppingCart size={22} />
+                  <ShoppingCart size={20} />
                   Add To Cart
                 </button>
 
@@ -310,7 +310,7 @@ export default function ProductDetails() {
 
                     navigate("/checkout");
                   }}
-                  className="border border-orange-200 hover:border-primary hover:text-primary px-10 py-5 rounded-2xl font-semibold transition"
+                  className="border border-orange-200 hover:border-primary hover:text-primary px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition text-sm sm:text-base"
                 >
                   Buy Now
                 </button>
@@ -329,7 +329,7 @@ export default function ProductDetails() {
                 </h2>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                 {relatedProducts.map((item) => (
                   <ProductCard key={item._id} product={item} />
                 ))}

@@ -71,8 +71,8 @@ export default function Home() {
         {/* BG */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#fff8f1] via-[#fffdf8] to-[#fff8f1]" />
 
-        <div className="container-custom relative py-12 lg:py-20">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
+        <div className="container-custom relative py-8 lg:py-12">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
             {/* LEFT */}
             <div>
               {/* BADGE */}
@@ -81,7 +81,7 @@ export default function Home() {
               </div>
 
               {/* HEADING */}
-              <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl leading-tight font-bold text-[#2b1d12] mt-8">
+              <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl leading-tight font-bold text-[#2b1d12] mt-6">
                 Bring Real Indian
                 <span className="text-primary"> Flavors</span>
                 <br />
@@ -89,7 +89,7 @@ export default function Home() {
               </h1>
 
               {/* DESC */}
-              <p className="mt-7 text-lg text-gray-600 leading-9 max-w-2xl">
+              <p className="mt-5 text-base text-gray-600 leading-relaxed max-w-xl">
                 Premium quality masalas and handpicked spices crafted with rich
                 aroma, purity and authentic taste for everyday cooking.
               </p>
@@ -98,35 +98,32 @@ export default function Home() {
               <div className="flex flex-wrap gap-5 mt-10">
                 <Link
                   to="/products"
-                  className="bg-primary hover:bg-secondary text-white px-8 py-5 rounded-2xl font-semibold transition shadow-xl hover:scale-105 flex items-center gap-3"
+                  className="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg hover:scale-105 flex items-center gap-2 text-sm sm:text-base"
                 >
                   Shop Now
-                  <ArrowRight size={20} />
+                  <ArrowRight size={18} />
                 </Link>
 
-                <button className="border border-orange-200 hover:border-primary hover:text-primary bg-white px-8 py-5 rounded-2xl font-semibold transition">
+                <button className="border border-orange-200 hover:border-primary hover:text-primary bg-white px-6 py-3 rounded-xl font-semibold transition text-sm sm:text-base">
                   Explore Collection
                 </button>
               </div>
 
               {/* STATS */}
-              <div className="grid grid-cols-3 gap-6 mt-14">
-                <div className="bg-white p-6 rounded-3xl shadow-lg border border-orange-100">
-                  <h3 className="text-3xl font-bold text-dark">50+</h3>
-
-                  <p className="text-gray-500 mt-2 text-sm">Premium Spices</p>
+              <div className="grid grid-cols-3 gap-3 sm:gap-6 mt-10">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-orange-100 text-center">
+                  <h3 className="text-xl sm:text-2xl font-bold text-dark">50+</h3>
+                  <p className="text-gray-500 mt-1 text-xs sm:text-sm">Premium Spices</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl shadow-lg border border-orange-100">
-                  <h3 className="text-3xl font-bold text-dark">10K+</h3>
-
-                  <p className="text-gray-500 mt-2 text-sm">Happy Customers</p>
+                <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-orange-100 text-center">
+                  <h3 className="text-xl sm:text-2xl font-bold text-dark">10K+</h3>
+                  <p className="text-gray-500 mt-1 text-xs sm:text-sm">Happy Customers</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl shadow-lg border border-orange-100">
-                  <h3 className="text-3xl font-bold text-dark">4.9★</h3>
-
-                  <p className="text-gray-500 mt-2 text-sm">Customer Rating</p>
+                <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-orange-100 text-center">
+                  <h3 className="text-xl sm:text-2xl font-bold text-dark">4.9★</h3>
+                  <p className="text-gray-500 mt-1 text-xs sm:text-sm">Customer Rating</p>
                 </div>
               </div>
             </div>
@@ -134,11 +131,11 @@ export default function Home() {
             {/* RIGHT */}
             <div className="relative">
               {/* MAIN IMAGE */}
-              <div className="relative rounded-[40px] overflow-hidden shadow-2xl border border-orange-100">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-orange-100">
                 <img
                   src={heroImg}
                   alt="Indian Spices"
-                  className="w-full h-[600px] object-cover hover:scale-105 transition duration-700"
+                  className="w-full h-[400px] lg:h-[480px] object-cover hover:scale-105 transition duration-700"
                 />
               </div>
 
@@ -158,10 +155,9 @@ export default function Home() {
               </div>
 
               {/* TRUST */}
-              <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-6 py-5 rounded-3xl shadow-xl border border-orange-100">
-                <p className="text-sm text-gray-500">Trusted By</p>
-
-                <h4 className="font-bold text-primary text-2xl mt-1">
+              <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-lg border border-orange-100">
+                <p className="text-xs sm:text-sm text-gray-500">Trusted By</p>
+                <h4 className="font-bold text-primary text-lg sm:text-xl mt-1">
                   10,000+ Families
                 </h4>
               </div>
@@ -171,7 +167,7 @@ export default function Home() {
       </section>
 
       {/* CATEGORIES */}
-      <section className="py-24 bg-white">
+      <section className="py-12 bg-white">
         <div className="container-custom">
           {/* TOP */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-16">
@@ -192,11 +188,11 @@ export default function Home() {
           </div>
 
           {/* GRID */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {categories.map((category, index) => (
               <div
                 key={index}
-                className="group relative h-80 rounded-[36px] overflow-hidden cursor-pointer shadow-xl"
+                className="group relative h-32 sm:h-40 md:h-48 lg:h-56 rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer shadow-lg"
               >
                 <img
                   src={category.image}
@@ -206,12 +202,12 @@ export default function Home() {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-                <div className="absolute bottom-0 left-0 p-8">
-                  <h3 className="text-white text-3xl font-bold">
+                <div className="absolute bottom-0 left-0 p-4 sm:p-6">
+                  <h3 className="text-white text-lg sm:text-2xl font-bold">
                     {category.name}
                   </h3>
 
-                  <p className="text-orange-200 mt-2">Premium Collection</p>
+                  <p className="text-orange-200 mt-1 text-xs sm:text-sm">Premium Collection</p>
                 </div>
               </div>
             ))}
@@ -220,7 +216,7 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section className="py-24 bg-[#fffdf8]">
+      <section className="py-12 bg-[#fffdf8]">
         <div className="container-custom">
           {/* TOP */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-16">
@@ -240,15 +236,14 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* PRODUCTS */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-5">
             {loading ? (
-              Array.from({ length: 8 }).map((_, idx) => (
+              Array.from({ length: 12 }).map((_, idx) => (
                 <ProductSkeleton key={idx} />
               ))
             ) : products.length > 0 ? (
               products
-                .slice(0, 8)
+                .slice(0, 16)
                 .map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))
@@ -262,7 +257,7 @@ export default function Home() {
       </section>
 
       {/* OFFER BANNER */}
-      <section className="py-24 bg-primary overflow-hidden relative">
+      <section className="py-12 bg-primary overflow-hidden relative">
         {/* BG */}
         <div className="absolute inset-0 opacity-10">
           <div className="w-[500px] h-[500px] bg-white rounded-full absolute -top-40 -left-40"></div>
@@ -323,7 +318,7 @@ export default function Home() {
       </section>
 
       {/* WHY CHOOSE US */}
-      <section className="py-24 bg-white">
+      <section className="py-12 bg-white">
         <div className="container-custom">
           {/* TOP */}
           <div className="text-center mb-20">
