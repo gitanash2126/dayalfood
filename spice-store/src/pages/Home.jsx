@@ -50,11 +50,17 @@ export default function Home() {
 
   const fetchProducts = async () => {
     try {
+      const cached = sessionStorage.getItem("homeProducts");
+      if (cached) {
+        setProducts(JSON.parse(cached));
+        setLoading(false);
+      }
+      
       const { data } = await API.get("/products");
-
-      console.log("Featured Products API:", data);
-
-      setProducts(groupProducts(data.products || data.data?.products || []));
+      const grouped = groupProducts(data.products || data.data?.products || []);
+      
+      setProducts(grouped);
+      sessionStorage.setItem("homeProducts", JSON.stringify(grouped));
     } catch (error) {
       console.log(error);
     } finally {

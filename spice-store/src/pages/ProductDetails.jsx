@@ -47,7 +47,17 @@ export default function ProductDetails() {
 
   const fetchProduct = async () => {
     try {
-      setLoading(true);
+      const cacheKey = `product_${slug}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setProduct(parsed.product);
+        setVariants(parsed.variants);
+        setRelatedProducts(parsed.relatedProducts);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
 
       const response = await API.get(`/products/${slug}`);
 
@@ -58,7 +68,6 @@ export default function ProductDetails() {
 
       if (!productData) {
         setLoading(false);
-
         return;
       }
 
@@ -79,8 +88,10 @@ export default function ProductDetails() {
         // Find the group that matches the current product baseName
         const matchedGroup = groupedAll.find(g => g.baseName === baseName);
 
+        let finalVariants = [];
         if (matchedGroup && matchedGroup.variants) {
-          setVariants(matchedGroup.variants);
+          finalVariants = matchedGroup.variants;
+          setVariants(finalVariants);
         } else {
           setVariants([]);
         }
@@ -90,7 +101,14 @@ export default function ProductDetails() {
           (item) => getProductBaseName(item.name, item.weight) !== baseName
         );
 
-        setRelatedProducts(filteredRelated.slice(0, 4));
+        const finalRelated = filteredRelated.slice(0, 4);
+        setRelatedProducts(finalRelated);
+
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          product: productData,
+          variants: finalVariants,
+          relatedProducts: finalRelated
+        }));
       } catch (error) {
         console.log(error);
       }

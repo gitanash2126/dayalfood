@@ -59,8 +59,6 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-
       let url = `/products?page=${currentPage}&limit=100`;
 
       // SEARCH
@@ -81,15 +79,28 @@ export default function Products() {
       // PRICE
       url += `&maxPrice=${maxPrice}`;
 
+      const cacheKey = url;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setProducts(parsed.products);
+        setTotalPages(parsed.totalPages);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
       const { data } = await API.get(url);
-
-      console.log("Products API:", data);
-
       const responseData = data.data;
+      const grouped = groupProducts(responseData.products || []);
 
-      setProducts(groupProducts(responseData.products || []));
-
+      setProducts(grouped);
       setTotalPages(responseData.totalPages || 1);
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        products: grouped,
+        totalPages: responseData.totalPages || 1
+      }));
     } catch (error) {
       console.log(error);
     } finally {
