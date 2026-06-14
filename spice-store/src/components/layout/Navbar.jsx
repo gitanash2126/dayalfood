@@ -88,52 +88,42 @@ export default function Navbar() {
 
             {/* USER */}
             {!user ? (
-              <>
-                <Link
-                  to="/login"
-                  className="hover:text-primary transition font-medium"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  to="/register"
-                  className="bg-primary hover:bg-secondary text-white px-5 py-3 rounded-2xl transition font-medium"
-                >
-                  Register
-                </Link>
-              </>
+              <Link
+                to="/login"
+                className="bg-primary hover:bg-secondary text-white px-6 py-2.5 rounded-xl transition font-semibold shadow-md hover:shadow-lg"
+              >
+                Login
+              </Link>
             ) : (
               <div className="relative">
                 {/* USER BUTTON */}
                 <button
                   onClick={() => setUserMenu(!userMenu)}
-                  className="flex items-center gap-3 bg-[#fff8f1] px-5 py-3 rounded-2xl hover:bg-orange-100 transition"
+                  className="flex items-center gap-2 bg-gray-50 border px-4 py-2 rounded-xl hover:bg-gray-100 transition"
                 >
-                  <User size={20} />
-
-                  <span className="font-medium">{user.name}</span>
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <User size={18} />
+                  </div>
+                  <span className="font-semibold text-sm">{user.name}</span>
                 </button>
 
                 {/* DROPDOWN */}
                 {userMenu && (
-                  <div className="absolute right-0 top-16 w-[240px] bg-white rounded-3xl shadow-2xl border p-4 z-50">
+                  <div className="absolute right-0 top-14 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50">
                     {/* USER INFO */}
-                    <div className="pb-4 border-b">
-                      <h3 className="font-bold text-lg">{user.name}</h3>
-
-                      <p className="text-gray-500 text-sm mt-1">{user.email}</p>
+                    <div className="px-3 py-3 border-b mb-2">
+                      <h3 className="font-bold text-gray-800">{user.name}</h3>
+                      <p className="text-gray-500 text-xs mt-0.5">{user.phone || "No Mobile Number"}</p>
                     </div>
 
                     {/* MY ORDERS */}
                     <Link
                       to="/my-orders"
                       onClick={() => setUserMenu(false)}
-                      className="flex items-center gap-3 px-4 py-4 rounded-2xl hover:bg-[#fff8f1] transition mt-3"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 transition"
                     >
-                      <PackageCheck size={20} />
-
-                      <span>My Orders</span>
+                      <PackageCheck size={18} className="text-primary" />
+                      <span className="font-medium text-sm">My Orders</span>
                     </Link>
 
                     {/* ADMIN */}
@@ -141,22 +131,20 @@ export default function Navbar() {
                       <Link
                         to="/admin"
                         onClick={() => setUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-4 rounded-2xl hover:bg-[#fff8f1] transition"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 transition"
                       >
-                        <LayoutDashboard size={20} />
-
-                        <span>Admin Dashboard</span>
+                        <LayoutDashboard size={18} className="text-primary" />
+                        <span className="font-medium text-sm">Admin Dashboard</span>
                       </Link>
                     )}
 
                     {/* LOGOUT */}
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 py-4 rounded-2xl hover:bg-red-50 text-red-500 transition w-full mt-2"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600 transition w-full mt-1"
                     >
-                      <LogOut size={20} />
-
-                      <span>Logout</span>
+                      <LogOut size={18} />
+                      <span className="font-medium text-sm">Logout</span>
                     </button>
                   </div>
                 )}
@@ -224,29 +212,18 @@ export default function Navbar() {
             </Link>
 
             {!user ? (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenu(false)}
-                  className="block font-medium"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenu(false)}
-                  className="block font-medium"
-                >
-                  Register
-                </Link>
-              </>
+              <Link
+                to="/login"
+                onClick={() => setMobileMenu(false)}
+                className="block font-medium text-primary"
+              >
+                Login
+              </Link>
             ) : (
               <>
                 <div className="border-t pt-5">
                   <p className="font-bold">{user.name}</p>
-
-                  <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+                  <p className="text-sm text-gray-500 mt-1">{user.phone || "No Mobile Number"}</p>
                 </div>
 
                 <Link

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 import API from "../api/axios";
+import { getProductImage } from "../utils/productImages";
+import toast from "react-hot-toast";
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -41,22 +43,22 @@ export default function MyOrders() {
   // CANCEL ORDER
   // ==========================================
   const cancelOrder = async (id) => {
-    const confirmCancel = window.confirm("Cancel this order?");
+    const confirmCancel = window.confirm("Are you sure you want to cancel this order? This action cannot be undone.");
 
     if (!confirmCancel) {
       return;
     }
 
     try {
+      const toastId = toast.loading("Cancelling order...");
       await API.put(`/orders/${id}/cancel`, {});
 
-      alert("Order Cancelled");
+      toast.success("Order Cancelled Successfully", { id: toastId });
 
       fetchOrders();
     } catch (error) {
       console.log(error);
-
-      alert(error.response?.data?.message || "Cancel Failed");
+      toast.error(error.response?.data?.message || "Failed to cancel order");
     }
   };
 
@@ -123,17 +125,6 @@ export default function MyOrders() {
 
                     {/* RIGHT */}
                     <div className="flex flex-wrap gap-4">
-                      {/* PAYMENT */}
-                      <span
-                        className={`px-6 py-3 rounded-full text-sm font-semibold ${
-                          order.paymentStatus === "Paid"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {order.paymentStatus}
-                      </span>
-
                       {/* STATUS */}
                       <span
                         className={`px-6 py-3 rounded-full text-sm font-semibold ${
@@ -146,7 +137,7 @@ export default function MyOrders() {
                                 : "bg-orange-100 text-orange-700"
                         }`}
                       >
-                        {order.orderStatus}
+                        {order.orderStatus || "Confirmed"}
                       </span>
                     </div>
                   </div>
@@ -168,19 +159,12 @@ export default function MyOrders() {
                             {/* LEFT */}
                             <div className="flex items-center gap-5">
                               <img
-                                src={
-                                  item.imageUrl || item.product?.image
-                                    ? (
-                                        item.imageUrl || item.product?.image
-                                      ).startsWith("/uploads")
-                                      ? `http://localhost:5000${
-                                          item.imageUrl || item.product?.image
-                                        }`
-                                      : item.imageUrl || item.product?.image
-                                    : "https://via.placeholder.com/120"
-                                }
+                                src={getProductImage(item.name, item.imageUrl || item.product?.image)}
                                 alt={item.name}
                                 className="w-24 h-24 rounded-3xl object-cover bg-[#fff8f1]"
+                                onError={(e) => {
+                                  e.target.src = "/images/no-image.png";
+                                }}
                               />
 
                               <div>

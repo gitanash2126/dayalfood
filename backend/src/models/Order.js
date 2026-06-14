@@ -85,8 +85,13 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["COD", "UPI_ON_DELIVERY"],
+      enum: ["COD", "UPI_ON_DELIVERY", "Online"],
       default: "COD",
+    },
+
+    transactionId: {
+      type: String,
+      default: "",
     },
 
     paymentStatus: {

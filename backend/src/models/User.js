@@ -59,14 +59,13 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Name is required"],
       trim: true,
-      minlength: [2, "Name must be at least 2 characters"],
+      default: "User",
     },
 
     email: {
       type: String,
-      required: [true, "Email is required"],
+      sparse: true,
       unique: true,
       lowercase: true,
       trim: true,
@@ -78,15 +77,23 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
       select: false,
     },
 
     phone: {
       type: String,
-      default: "",
+      required: [true, "Phone number is required"],
+      unique: true,
       trim: true,
+    },
+
+    otp: {
+      type: String,
+    },
+    
+    otpExpires: {
+      type: Date,
     },
 
     role: {

@@ -31,6 +31,7 @@ const createOrder = asyncHandler(async (req, res) => {
     orderItems,
     shippingAddress,
     paymentMethod,
+    transactionId,
     itemsPrice,
     taxPrice,
     shippingPrice,
@@ -73,7 +74,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
       name: product.name,
 
-      image: product.imageUrl,
+      imageUrl: product.image,
 
       price: product.price,
 
@@ -92,6 +93,7 @@ const createOrder = asyncHandler(async (req, res) => {
     shippingAddress,
 
     paymentMethod,
+    transactionId: transactionId || "",
 
     itemsPrice,
 
@@ -101,6 +103,30 @@ const createOrder = asyncHandler(async (req, res) => {
 
     totalPrice,
   });
+
+  // ==========================================
+  // AUTO UPDATE USER PROFILE
+  // ==========================================
+  const dbUser = await User.findById(req.user._id);
+  if (dbUser) {
+    if (dbUser.name === "User" || !dbUser.name) {
+      dbUser.name = shippingAddress.fullName;
+    }
+    
+    // Auto-update address list if empty or just overwrite default
+    dbUser.addresses = [
+      {
+        fullName: shippingAddress.fullName,
+        phone: shippingAddress.phone,
+        address: shippingAddress.address,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        postalCode: shippingAddress.postalCode,
+        isDefault: true,
+      }
+    ];
+    await dbUser.save({ validateBeforeSave: false });
+  }
 
   // ==========================================
   // UPDATE STOCK
@@ -195,7 +221,7 @@ ${paymentMethod}
 const getMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({
     user: req.user._id,
-  }).sort({
+  }).populate("orderItems.product").sort({
     createdAt: -1,
   });
 

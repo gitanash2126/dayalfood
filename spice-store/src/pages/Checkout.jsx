@@ -14,7 +14,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   // AUTH
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // CART
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -32,16 +32,23 @@ export default function Checkout() {
 
   const [postalCode, setPostalCode] = useState("");
 
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+
+  const [distance, setDistance] = useState("");
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   // ==========================================
   // CHECK AUTH & CART
   // ==========================================
   useEffect(() => {
+    if (authLoading) return;
+
     // LOGIN CHECK
     if (!user) {
       navigate("/login");
-
       return;
     }
 
@@ -52,20 +59,80 @@ export default function Checkout() {
 
     // AUTO FILL
     setFullName(user.name || "");
-
     setPhone(user.phone || "");
-  }, [user, cartItems, navigate]);
+  }, [user, authLoading, cartItems, navigate]);
 
-  // SHIPPING
-  const shippingCharge = cartTotal >= 500 ? 0 : 40;
+  // ==========================================
+  // AUTO CALCULATE DISTANCE
+  // ==========================================
+  useEffect(() => {
+    const fetchDistance = async () => {
+      // Require both Postal Code and City for accurate Indian geocoding
+      if (postalCode.length === 6 && city.length >= 3) {
+        setCalculatingDistance(true);
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${postalCode}&city=${encodeURIComponent(city)}&country=India&format=json`);
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const userLat = parseFloat(data[0].lat);
+            const userLng = parseFloat(data[0].lon);
+            
+            // Amrit Dayal Food - Nathmalpur, Gorakhpur Coords
+            const STORE_LAT = 26.7663;
+            const STORE_LNG = 83.3689;
+            
+            // Haversine formula
+            const R = 6371; // km
+            const dLat = (userLat - STORE_LAT) * Math.PI / 180;
+            const dLon = (userLng - STORE_LNG) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(STORE_LAT * Math.PI / 180) * Math.cos(userLat * Math.PI / 180) * 
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            
+            setDistance(d);
+          } else {
+            setDistance(10); // default > 5km
+          }
+        } catch (err) {
+          setDistance(10);
+        } finally {
+          setCalculatingDistance(false);
+        }
+      } else {
+        setDistance(""); // Reset if not fully entered
+      }
+    };
+    
+    // Add debounce
+    const timeoutId = setTimeout(() => {
+      fetchDistance();
+    }, 1000);
 
-  const finalTotal = Number(cartTotal) + shippingCharge;
+    return () => clearTimeout(timeoutId);
+  }, [postalCode, city]);
+
+  // SHIPPING & DISCOUNT
+  const discount = paymentMethod === "Online" ? Number(cartTotal) * 0.05 : 0;
+  
+  let shippingCharge = 0;
+  if (distance !== "") {
+    shippingCharge = Number(distance) <= 5 ? 49 : 99;
+  }
+
+  const finalTotal = Math.round(Number(cartTotal) - discount + shippingCharge);
 
   // ==========================================
   // PLACE ORDER
   // ==========================================
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+
+    if (paymentMethod === "Online" && (!transactionId || transactionId.length < 10)) {
+      alert("Please enter a valid Transaction / UTR ID for your Online Payment.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -97,7 +164,12 @@ export default function Checkout() {
           country: "India",
         },
 
-        paymentMethod: "COD",
+        paymentMethod,
+        transactionId: paymentMethod === "Online" ? transactionId : "",
+        itemsPrice: cartTotal,
+        shippingPrice: shippingCharge,
+        taxPrice: 0,
+        totalPrice: finalTotal,
       });
 
       console.log("ORDER:", data);
@@ -222,9 +294,68 @@ export default function Checkout() {
 
           {/* PAYMENT */}
           <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
-            <h3 className="font-semibold text-lg">Payment Method</h3>
+            {/* PAYMENT METHOD */}
+            <h3 className="text-xl font-bold font-heading text-dark mt-10 mb-6 flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">2</span>
+              Payment Method
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("COD")}
+                className={`py-4 px-4 rounded-2xl border-2 font-bold transition-all flex flex-col items-center gap-2 ${
+                  paymentMethod === "COD" 
+                    ? "border-primary bg-orange-50 text-primary" 
+                    : "border-gray-100 text-gray-500 hover:border-orange-200 hover:bg-orange-50/50"
+                }`}
+              >
+                Cash on Delivery
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("Online")}
+                className={`py-4 px-4 rounded-2xl border-2 font-bold transition-all flex flex-col items-center gap-2 ${
+                  paymentMethod === "Online" 
+                    ? "border-primary bg-orange-50 text-primary" 
+                    : "border-gray-100 text-gray-500 hover:border-orange-200 hover:bg-orange-50/50"
+                }`}
+              >
+                Online (5% OFF)
+              </button>
+            </div>
 
-            <p className="text-gray-600 mt-2">Cash On Delivery (COD)</p>
+            {/* DISTANCE & SHIPPING INFO HAPPENS SILENTLY IN BACKGROUND */}
+
+            {paymentMethod === "Online" && (
+              <div className="mt-5 bg-white p-6 rounded-xl border border-orange-200 text-center shadow-inner">
+                <h4 className="font-bold text-dark text-lg mb-2">Pay via UPI to Confirm Order</h4>
+                <p className="text-sm text-gray-600 mb-4">Scan the QR code below with PhonePe, GPay, or Paytm.</p>
+                
+                {/* DYNAMIC UPI QR CODE */}
+                <div className="bg-white p-3 rounded-2xl inline-block shadow-md border border-gray-100 mb-4">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=7275060800@paytm&pn=Amrit%20Dayal%20Food&am=${finalTotal}&cu=INR`} 
+                    alt="UPI QR Code" 
+                    className="w-40 h-40 object-contain mx-auto"
+                  />
+                </div>
+                
+                <p className="text-primary font-bold text-xl mb-6">Amount: ₹{finalTotal}</p>
+
+                <div className="text-left">
+                  <label className="text-sm font-bold text-gray-700 block mb-2">Enter Transaction ID / UTR No. *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 301234567890"
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-primary font-medium tracking-wide"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Required to verify your payment. Your order will be processed after verification.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* BUTTON */}
@@ -274,10 +405,17 @@ export default function Checkout() {
             <div className="flex justify-between">
               <span>Shipping</span>
 
-              <span className="text-green-600">
+              <span className={shippingCharge === 0 ? "text-green-600 font-semibold" : "font-semibold"}>
                 {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
               </span>
             </div>
+
+            {discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Online Discount (5%)</span>
+                <span className="font-semibold">-₹{Math.round(discount)}</span>
+              </div>
+            )}
 
             <hr />
 

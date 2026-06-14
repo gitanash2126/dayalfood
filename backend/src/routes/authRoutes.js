@@ -1,7 +1,8 @@
 const express = require("express");
 
 const {
-  registerUser,
+  sendOtp,
+  verifyOtp,
   loginUser,
   getProfile,
   updateProfile,
@@ -10,7 +11,6 @@ const {
 } = require("../controllers/authController");
 
 const {
-  validateRegister,
   validateLogin,
 } = require("../middlewares/validationMiddleware");
 
@@ -18,7 +18,8 @@ const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/register", validateRegister, registerUser);
+router.post("/send-otp", sendOtp);
+router.post("/verify-otp", verifyOtp);
 
 router.post("/login", validateLogin, loginUser);
 

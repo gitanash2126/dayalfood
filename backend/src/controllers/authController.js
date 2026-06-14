@@ -22,55 +22,94 @@ const cookieOptions = {
 };
 
 // ==========================================
-// REGISTER USER
+// SEND OTP (MOBILE LOGIN)
 // ==========================================
-const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, phone } = req.body;
+const sendOtp = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
 
-  // CHECK USER
-  const userExists = await User.findOne({
-    email,
-  });
-
-  if (userExists) {
+  if (!phone) {
     res.status(400);
-
-    throw new Error("User already exists with this email");
+    throw new Error("Phone number is required");
   }
 
-  // CREATE USER
-  const user = await User.create({
-    name,
+  // Generate a dynamic 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    email,
+  // Find or create user
+  let user = await User.findOne({ phone });
 
-    password,
+  if (!user) {
+    user = await User.create({
+      phone,
+      email: `${phone}@dayalfood.com`, // Add dummy email to prevent E11000 duplicate null email error
+      otp,
+      otpExpires,
+      role: "user",
+      isActive: true
+    });
+  } else {
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+  }
 
-    phone,
-  });
+  // We are NOT calling any external SMS API to guarantee 100% free operation for now.
+  successResponse(res, 200, "OTP sent successfully", { testOtp: otp });
+});
+
+// ==========================================
+// VERIFY OTP (MOBILE LOGIN)
+// ==========================================
+const verifyOtp = asyncHandler(async (req, res) => {
+  const { phone, otp } = req.body;
+
+  if (!phone || !otp) {
+    res.status(400);
+    throw new Error("Phone number and OTP are required");
+  }
+
+  const user = await User.findOne({ phone });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user.otp !== otp) {
+    res.status(400);
+    throw new Error("Invalid OTP");
+  }
+
+  // Clear OTP
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  await user.save();
+
+  // ACTIVE CHECK
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error("Your account is inactive");
+  }
 
   // TOKEN
   const token = generateToken(user._id);
 
-  // SET COOKIE
+  // COOKIE
   res.cookie("token", token, cookieOptions);
 
   // RESPONSE
-  successResponse(res, 201, "User registered successfully", {
+  successResponse(res, 200, "Login successful", {
     _id: user._id,
-
     name: user.name,
-
     email: user.email,
-
     phone: user.phone,
-
     role: user.role,
   });
 });
 
 // ==========================================
-// LOGIN USER
+// LOGIN ADMIN (EMAIL & PASSWORD)
 // ==========================================
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -257,8 +296,8 @@ const makeAdmin = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  registerUser,
-
+  sendOtp,
+  verifyOtp,
   loginUser,
 
   logoutUser,

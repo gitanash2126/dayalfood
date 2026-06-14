@@ -12,6 +12,7 @@ import {
   CreditCard
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getProductImage } from "../../utils/productImages";
 
 export default function AdminOrders() {
   // STATES
@@ -40,7 +41,7 @@ export default function AdminOrders() {
     try {
       const toastId = toast.loading("Updating status...");
       await API.put(`/orders/${id}/status`, {
-        orderStatus: status,
+        status: status,
       });
       toast.success("Order Status Updated", { id: toastId });
       fetchOrders();
@@ -143,6 +144,11 @@ export default function AdminOrders() {
                       <CreditCard size={14} />
                       {order.paymentStatus}
                     </span>
+                    {order.transactionId && (
+                      <p className="text-[10px] text-gray-500 font-bold mt-2 bg-gray-100 px-2 py-1 rounded-md">
+                        UTR: {order.transactionId}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -157,9 +163,12 @@ export default function AdminOrders() {
                     {order.orderItems?.map((item, index) => (
                       <div key={index} className="flex items-center gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100">
                         <img
-                          src={item.image || "https://via.placeholder.com/80"}
+                          src={getProductImage(item.name, item.imageUrl || item.image || item.product?.image)}
                           alt={item.name}
                           className="w-16 h-16 rounded-xl object-cover bg-white border border-gray-200"
+                          onError={(e) => {
+                            e.target.src = "/images/no-image.png";
+                          }}
                         />
                         <div className="flex-1">
                           <h4 className="font-bold text-dark">{item.name}</h4>

@@ -80,9 +80,9 @@ export default function AdminUsers() {
             <tr className="border-b">
               <th className="text-left py-4">Name</th>
 
-              <th className="text-left py-4">Email</th>
-
               <th className="text-left py-4">Phone</th>
+
+              <th className="text-left py-4">Address</th>
 
               <th className="text-left py-4">Role</th>
 
@@ -98,11 +98,20 @@ export default function AdminUsers() {
                 {/* NAME */}
                 <td className="py-5 font-semibold">{user.name}</td>
 
-                {/* EMAIL */}
-                <td className="py-5">{user.email}</td>
-
                 {/* PHONE */}
                 <td className="py-5">{user.phone || "N/A"}</td>
+
+                {/* ADDRESS */}
+                <td className="py-5">
+                  {user.addresses && user.addresses.length > 0 ? (
+                    <div className="text-sm">
+                      <p>{user.addresses[0].address}</p>
+                      <p className="text-gray-500 text-xs">{user.addresses[0].city}, {user.addresses[0].postalCode}</p>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-sm">No Orders Yet</span>
+                  )}
+                </td>
 
                 {/* ROLE */}
                 <td className="py-5">

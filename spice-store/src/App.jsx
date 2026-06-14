@@ -14,7 +14,7 @@ import ProductDetails from "./pages/ProductDetails";
 
 import Login from "./pages/Login";
 
-import Register from "./pages/Register";
+import AdminLogin from "./pages/AdminLogin";
 
 import Cart from "./pages/Cart";
 
@@ -65,7 +65,7 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
 
-          <Route path="/register" element={<Register />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
 
           <Route path="/cart" element={<Cart />} />
 
