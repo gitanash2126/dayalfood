@@ -169,7 +169,7 @@ export default function MyOrders() {
 
                               <div>
                                 <h4 className="text-xl font-semibold">
-                                  {item.name}
+                                  {item.name} {item.hindiName && <span className="text-gray-500 font-normal">({item.hindiName})</span>}
                                 </h4>
 
                                 <p className="text-gray-500 mt-2">

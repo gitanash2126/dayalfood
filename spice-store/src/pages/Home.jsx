@@ -10,6 +10,7 @@ import ProductSkeleton from "../components/products/ProductSkeleton";
 import API from "../api/axios";
 
 import { groupProducts } from "../utils/productHelpers";
+import localProducts from "../data/products.js";
 
 import heroImg from "../assets/products/mishritkhadamasala.jpeg";
 import offerImg from "../assets/products/badiilaichi.jpeg";
@@ -39,9 +40,13 @@ const categories = [
 ];
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => {
+    const cached = sessionStorage.getItem("homeProducts");
+    if (cached) return JSON.parse(cached);
+    return groupProducts(localProducts);
+  });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // FETCH PRODUCTS
   useEffect(() => {
@@ -50,12 +55,6 @@ export default function Home() {
 
   const fetchProducts = async () => {
     try {
-      const cached = sessionStorage.getItem("homeProducts");
-      if (cached) {
-        setProducts(JSON.parse(cached));
-        setLoading(false);
-      }
-      
       const { data } = await API.get("/products");
       const grouped = groupProducts(data.products || data.data?.products || []);
       

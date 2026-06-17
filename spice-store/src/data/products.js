@@ -31,7 +31,7 @@ const products = [
 
   {
     id: 3,
-    name: "Bay Leaf",
+    name: "Tej Patta",
     slug: "bay-leaf",
     category: "Whole Spices",
     weight: "100g",
@@ -44,7 +44,7 @@ const products = [
 
   {
     id: 4,
-    name: "Black Mustard",
+    name: "Kali Sarson",
     slug: "black-mustard",
     category: "Seeds",
     weight: "200g",
@@ -70,7 +70,7 @@ const products = [
 
   {
     id: 6,
-    name: "Clove",
+    name: "Laung",
     slug: "clove",
     category: "Whole Spices",
     weight: "100g",
@@ -84,6 +84,7 @@ const products = [
   {
     id: 7,
     name: "Dhaniya Powder",
+    hindiName: "धनिया पाउडर",
     slug: "dhaniya-powder",
     category: "Ground Spices",
     weight: "200g",
@@ -241,6 +242,7 @@ const products = [
   {
     id: 19,
     name: "Magrail",
+    hindiName: "मंगरेल",
     slug: "magrail",
     category: "Seeds",
     weight: "150g",
@@ -254,6 +256,7 @@ const products = [
   {
     id: 20,
     name: "Mirchi Powder",
+    hindiName: "लाल मिर्च पाउडर",
     slug: "mirchi-powder",
     category: "Ground Spices",
     weight: "250g",
@@ -280,6 +283,7 @@ const products = [
   {
     id: 22,
     name: "Pach Fodan",
+    hindiName: "पचफोड़न",
     slug: "pach-fodan",
     category: "Seeds",
     weight: "200g",
@@ -319,6 +323,7 @@ const products = [
   {
     id: 25,
     name: "Safed Gol Mirchi",
+    hindiName: "सफेद गोल मिर्च",
     slug: "safed-gol-mirchi",
     category: "Whole Spices",
     weight: "100g",
@@ -344,7 +349,7 @@ const products = [
 
   {
     id: 27,
-    name: "Sauff",
+    name: "Saunf",
     slug: "sauff",
     category: "Seeds",
     weight: "250g",
@@ -370,7 +375,7 @@ const products = [
 
   {
     id: 29,
-    name: "Star Fool",
+    name: "Chakra Phool",
     slug: "star-fool",
     category: "Whole Spices",
     weight: "100g",

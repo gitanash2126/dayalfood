@@ -310,7 +310,7 @@ export default function AdminDashboard() {
                     />
 
                     <div>
-                      <h3 className="font-bold text-lg">{product.name}</h3>
+                      <h3 className="font-bold text-lg">{product.name} {product.hindiName && <span className="text-sm font-medium text-gray-500">({product.hindiName})</span>}</h3>
 
                       <p className="text-gray-500 mt-1">₹{product.price}</p>
                     </div>
@@ -349,7 +349,7 @@ export default function AdminDashboard() {
                 />
 
                 <div>
-                  <h3 className="font-bold text-xl">{product.name}</h3>
+                  <h3 className="font-bold text-xl">{product.name} {product.hindiName && <span className="text-sm font-medium text-gray-500">({product.hindiName})</span>}</h3>
 
                   <p className="text-gray-500 mt-2">₹{product.price}</p>
                 </div>

@@ -141,8 +141,11 @@ export const getProductImage = (name, fallbackImage) => {
     return productImages[searchName];
   }
   
+  // Sort keys by length descending so "safed mirch powder" is checked before "mirch powder"
+  const sortedKeys = Object.keys(productImages).sort((a, b) => b.length - a.length);
+
   // Try includes match
-  for (const key in productImages) {
+  for (const key of sortedKeys) {
     if (searchName.includes(key) || key.includes(searchName)) {
       return productImages[key];
     }

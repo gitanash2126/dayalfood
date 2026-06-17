@@ -205,7 +205,7 @@ export default function ProductDetails() {
 
               {/* NAME */}
               <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-dark mt-2 leading-tight">
-                {product.name}
+                {product.name} {product.hindiName && <span className="text-xl sm:text-2xl text-gray-500 font-normal ml-2">({product.hindiName})</span>}
               </h1>
 
               {/* RATING */}

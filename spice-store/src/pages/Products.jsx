@@ -11,19 +11,18 @@ import {
 import ProductCard from "../components/products/ProductCard";
 import ProductSkeleton from "../components/products/ProductSkeleton";
 
-import API from "../api/axios";
-
 import { groupProducts } from "../utils/productHelpers";
+import localProducts from "../data/products.js";
 
 export default function Products() {
   // MOBILE FILTER
   const [mobileFilters, setMobileFilters] = useState(false);
 
   // PRODUCTS
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => groupProducts(localProducts));
 
   // LOADING
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // PAGINATION
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,53 +57,49 @@ export default function Products() {
   }, [currentPage, selectedCategory, sortBy, maxPrice]);
 
   const fetchProducts = async () => {
+    // ================= LOCAL INSTANT FILTER ================= //
+    let filteredLocal = localProducts;
+    
+    if (searchTerm.trim()) {
+      filteredLocal = filteredLocal.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (p.hindiName && p.hindiName.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    if (selectedCategory !== "All") {
+      filteredLocal = filteredLocal.filter(p => p.category === selectedCategory);
+    }
+    filteredLocal = filteredLocal.filter(p => (p.sale_price || p.price) <= maxPrice);
+    
+    if (sortBy === "price-low") {
+      filteredLocal.sort((a, b) => (a.sale_price || a.price) - (b.sale_price || b.price));
+    } else if (sortBy === "price-high") {
+      filteredLocal.sort((a, b) => (b.sale_price || b.price) - (a.sale_price || a.price));
+    } else if (sortBy === "rating") {
+      filteredLocal.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+
+    setProducts(groupProducts(filteredLocal));
+    setLoading(false);
+
+    // Optional: Still fetch from API in background silently
     try {
       let url = `/products?page=${currentPage}&limit=100`;
-
-      // SEARCH
-      if (searchTerm.trim()) {
-        url += `&keyword=${searchTerm}`;
-      }
-
-      // CATEGORY
-      if (selectedCategory !== "All") {
-        url += `&category=${selectedCategory}`;
-      }
-
-      // SORT
-      if (sortBy) {
-        url += `&sort=${sortBy}`;
-      }
-
-      // PRICE
+      if (searchTerm.trim()) url += `&keyword=${searchTerm}`;
+      if (selectedCategory !== "All") url += `&category=${selectedCategory}`;
+      if (sortBy) url += `&sort=${sortBy}`;
       url += `&maxPrice=${maxPrice}`;
 
-      const cacheKey = url;
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        setProducts(parsed.products);
-        setTotalPages(parsed.totalPages);
-        setLoading(false);
-      } else {
-        setLoading(true);
-      }
-
+      // We are importing API here directly to avoid top-level issues if we missed it
+      const API = (await import("../api/axios")).default;
       const { data } = await API.get(url);
       const responseData = data.data;
-      const grouped = groupProducts(responseData.products || []);
-
-      setProducts(grouped);
-      setTotalPages(responseData.totalPages || 1);
-      
-      sessionStorage.setItem(cacheKey, JSON.stringify({
-        products: grouped,
-        totalPages: responseData.totalPages || 1
-      }));
+      if (responseData && responseData.products?.length > 0) {
+         setProducts(groupProducts(responseData.products));
+         setTotalPages(responseData.totalPages || 1);
+      }
     } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+      console.log("Background fetch failed, using local data.");
     }
   };
 
@@ -242,7 +237,7 @@ export default function Products() {
               <div className="flex items-center justify-between mb-10">
                 <div>
                   <h2 className="text-3xl font-semibold text-dark">
-                    {products.length} Products
+                    {loading ? "Loading..." : `${products.length} Products`}
                   </h2>
 
                   <p className="text-gray-500 mt-2">

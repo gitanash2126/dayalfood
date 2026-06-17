@@ -74,6 +74,8 @@ const createOrder = asyncHandler(async (req, res) => {
 
       name: product.name,
 
+      hindiName: product.hindiName || "",
+
       imageUrl: product.image,
 
       price: product.price,

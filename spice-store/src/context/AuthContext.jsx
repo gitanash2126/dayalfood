@@ -57,6 +57,7 @@ export function AuthProvider({ children }) {
       console.log(error);
     }
 
+    localStorage.removeItem("user");
     setUser(null);
   };
 

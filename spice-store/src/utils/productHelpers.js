@@ -42,6 +42,7 @@ export function groupProducts(productsList) {
         numReviews: product.numReviews,
         isFeatured: product.isFeatured,
         isActive: product.isActive,
+        hindiName: product.hindiName || "",
         variants: [],
       };
     }
@@ -52,6 +53,7 @@ export function groupProducts(productsList) {
         grouped[baseName].variants.push({
           _id: `${product._id || product.id}-${v.weight}`,
           name: product.name,
+          hindiName: product.hindiName || "",
           weight: v.weight,
           price: v.price,
           sale_price: v.sale_price || v.price,
@@ -66,6 +68,7 @@ export function groupProducts(productsList) {
       grouped[baseName].variants.push({
         _id: product._id || product.id,
         name: product.name,
+        hindiName: product.hindiName || "",
         weight: product.weight || "500g",
         price: product.price,
         sale_price: product.sale_price || product.price,
@@ -100,6 +103,7 @@ export function groupProducts(productsList) {
       sale_price: defaultVariant.sale_price,
       stock: defaultVariant.stock,
       weight: defaultVariant.weight,
+      hindiName: group.hindiName,
       slug: defaultVariant.slug,
     };
   });

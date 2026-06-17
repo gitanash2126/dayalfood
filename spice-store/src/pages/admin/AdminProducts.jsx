@@ -19,6 +19,7 @@ export default function AdminProducts() {
   // =====================================
   const [formData, setFormData] = useState({
     name: "",
+    hindiName: "",
     category: "",
     brand: "",
     description: "",
@@ -100,6 +101,7 @@ export default function AdminProducts() {
     setPreview("");
     setFormData({
       name: "",
+      hindiName: "",
       category: "",
       brand: "",
       description: "",
@@ -117,6 +119,7 @@ export default function AdminProducts() {
       setSubmitting(true);
       const productData = new FormData();
       productData.append("name", formData.name);
+      productData.append("hindiName", formData.hindiName);
       productData.append("category", formData.category);
       productData.append("brand", formData.brand);
       productData.append("description", formData.description);
@@ -164,6 +167,7 @@ export default function AdminProducts() {
 
     setFormData({
       name: product.name || "",
+      hindiName: product.hindiName || "",
       category: typeof product.category === "object" ? product.category?.name : product.category || "",
       brand: product.brand || "",
       description: product.description || "",
@@ -218,6 +222,10 @@ export default function AdminProducts() {
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Product Name</label>
               <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full border border-gray-200 rounded-2xl px-5 py-3.5 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" placeholder="e.g. Shah Jeera" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Hindi Name</label>
+              <input type="text" name="hindiName" value={formData.hindiName} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-3.5 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" placeholder="e.g. शाह जीरा" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
@@ -329,7 +337,7 @@ export default function AdminProducts() {
                       {product.category || "Spice"}
                     </p>
                     <h3 className="text-lg font-bold text-dark leading-tight line-clamp-1 mb-2">
-                      {product.name}
+                      {product.name} {product.hindiName && <span className="text-sm font-medium text-gray-500">({product.hindiName})</span>}
                     </h3>
                     <div className="flex items-end justify-between">
                       <p className="text-xl font-black text-dark">₹{product.price}</p>

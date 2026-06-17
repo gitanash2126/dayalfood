@@ -106,7 +106,7 @@ export default function AdminLowStock() {
 
                       <div>
                         <h3 className="font-semibold text-lg">
-                          {product.name}
+                          {product.name} {product.hindiName && <span className="text-sm font-normal text-gray-500">({product.hindiName})</span>}
                         </h3>
 
                         <p className="text-primary font-bold mt-1">

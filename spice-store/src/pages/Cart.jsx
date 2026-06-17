@@ -80,7 +80,7 @@ export default function Cart() {
                               {item.category || "Premium Spice"}
                             </p>
                             <h2 className="text-xl sm:text-2xl font-bold text-dark font-heading leading-tight group-hover:text-primary transition-colors">
-                              {item.name}
+                              {item.name} {item.hindiName && <span className="text-lg font-medium text-gray-500">({item.hindiName})</span>}
                             </h2>
                             <p className="text-gray-500 mt-1 text-sm font-medium bg-gray-50 inline-block px-3 py-1 rounded-lg">
                               Pack: {item.weight || "Standard"}

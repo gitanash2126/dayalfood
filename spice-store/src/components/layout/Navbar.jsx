@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/products/logo.jpeg";
 
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import CartSidebar from "../cart/CartSidebar";
 
 export default function Navbar() {
@@ -31,7 +32,7 @@ export default function Navbar() {
   const [userMenu, setUserMenu] = useState(false);
 
   // USER
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const { user, logout } = useAuth();
 
   // CART
   const {
@@ -43,14 +44,9 @@ export default function Navbar() {
   } = useCart();
 
   // LOGOUT
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-
-    localStorage.removeItem("user");
-
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
-
-    window.location.reload();
   };
 
   return (

@@ -75,6 +75,13 @@ const productSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // HINDI NAME
+    hindiName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     // SLUG
     slug: {
       type: String,

@@ -49,24 +49,27 @@ export default function ProductCard({ product }) {
   const productImage = getProductImage(product?.name, product?.image || product?.imageUrl);
 
   return (
-    <div className="group bg-white rounded-xl sm:rounded-2xl overflow-hidden border border-orange-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <div className="group bg-white/80 backdrop-blur-lg rounded-[24px] overflow-hidden border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(217,119,6,0.15)] transition-all duration-500 hover:-translate-y-2 relative">
+      {/* SHINE EFFECT */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
+
       {/* IMAGE */}
-      <div className="relative overflow-hidden bg-[#fff8f1]">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#fffdf8] to-[#fdf6e3] p-2 sm:p-3 pb-0 sm:pb-0">
         {/* QUICK VIEW */}
         <Link
           to={productLink}
-          className="absolute top-2 right-2 z-20 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition duration-300 hover:bg-primary hover:text-white"
+          className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white hover:scale-110"
         >
-          <Eye size={16} />
+          <Eye size={18} />
         </Link>
 
         {/* PRODUCT IMAGE */}
-        <Link to={productLink}>
+        <Link to={productLink} className="block overflow-hidden rounded-[16px] shadow-sm">
           <img
             src={productImage}
             alt={product?.name || "Product"}
             loading="lazy"
-            className="w-full h-[140px] sm:h-[180px] object-cover group-hover:scale-105 transition duration-500"
+            className="w-full h-[140px] sm:h-[180px] object-cover group-hover:scale-110 transition duration-700"
             onError={(e) => {
               e.target.src = "/images/no-image.png";
             }}
@@ -86,7 +89,7 @@ export default function ProductCard({ product }) {
         {/* PRODUCT NAME */}
         <Link to={productLink}>
           <h3 className="text-sm sm:text-lg font-semibold text-dark mt-1 group-hover:text-primary transition line-clamp-2">
-            {product?.name}
+            {product?.name} {product?.hindiName && <span className="text-sm font-medium text-gray-500">({product.hindiName})</span>}
           </h3>
         </Link>
 
@@ -168,9 +171,9 @@ export default function ProductCard({ product }) {
               };
               addToCart(toAdd);
             }}
-            className="bg-primary hover:bg-secondary text-white p-2 sm:p-3 rounded-lg sm:rounded-xl transition duration-300 shadow-md hover:scale-105"
+            className="bg-primary hover:bg-secondary text-white p-2.5 sm:p-3.5 rounded-[14px] transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
           >
-            <ShoppingCart size={16} className="sm:w-5 sm:h-5" />
+            <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>

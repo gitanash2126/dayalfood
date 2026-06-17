@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Phone, CheckCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
@@ -7,7 +7,14 @@ import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState("");
@@ -69,7 +76,8 @@ export default function Login() {
       if (user.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/");
+        const fromPath = typeof location.state?.from === 'string' ? location.state.from : (location.state?.from?.pathname || "/");
+        navigate(fromPath, { replace: true });
       }
     } catch (error) {
       console.log(error);
@@ -80,12 +88,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f4e8] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-xl bg-white rounded-[40px] shadow-2xl border border-orange-100 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-16 overflow-hidden bg-gradient-to-br from-[#fffdf8] via-[#fdf6e3] to-[#f4e6ce]">
+      {/* BACKGROUND BLOBS */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-orange-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob pointer-events-none"></div>
+      <div className="absolute top-[20%] right-[-10%] w-[35vw] h-[35vw] bg-yellow-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-2000 pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] left-[20%] w-[40vw] h-[40vw] bg-orange-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-4000 pointer-events-none"></div>
+
+      <div className="w-full max-w-xl bg-white/90 backdrop-blur-xl rounded-[40px] shadow-[0_20px_50px_rgba(217,119,6,0.15)] border border-white/50 overflow-hidden relative z-10 animate-fade-in-up">
         {/* TOP */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-10 py-12 text-center">
-          <h1 className="font-heading text-5xl text-white">Login</h1>
-          <p className="text-orange-50 mt-5 text-lg leading-8">
+        <div className="bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-500 px-10 py-12 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm mix-blend-overlay"></div>
+          <h1 className="font-heading text-5xl text-white relative z-10 drop-shadow-md">Login</h1>
+          <p className="text-orange-50 mt-5 text-lg leading-8 relative z-10 drop-shadow-sm font-medium">
             Login with your mobile number to continue shopping.
           </p>
         </div>
@@ -107,7 +121,7 @@ export default function Login() {
                     placeholder="Enter your 10-digit number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full border border-gray-200 focus:border-primary outline-none pl-16 pr-5 py-4 rounded-2xl text-lg transition tracking-widest font-semibold"
+                    className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-16 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 tracking-widest font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
                     maxLength={10}
                     required
                   />
@@ -146,7 +160,7 @@ export default function Login() {
                   placeholder="Enter 6-digit OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="w-full border border-gray-200 focus:border-primary outline-none px-5 py-4 rounded-2xl text-lg transition text-center tracking-[0.5em] font-bold"
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none px-5 py-4 rounded-2xl text-lg transition-all duration-300 text-center tracking-[0.5em] font-bold bg-white/70 backdrop-blur-sm hover:border-orange-300"
                   maxLength={6}
                   required
                   autoFocus
@@ -164,14 +178,7 @@ export default function Login() {
             </form>
           )}
 
-          <div className="mt-10 text-center">
-             <Link
-                to="/admin-login"
-                className="text-gray-400 hover:text-gray-600 font-semibold transition text-sm"
-              >
-                Admin Login
-             </Link>
-          </div>
+          {/* Admin Login Link Removed As Requested */}
         </div>
       </div>
     </div>

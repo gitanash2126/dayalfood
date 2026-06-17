@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-import { ShoppingBag, MapPin, Phone, User } from "lucide-react";
+import { ShoppingBag, MapPin, Phone, User, CheckCircle2 } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
 
@@ -37,18 +37,21 @@ export default function Checkout() {
   const [distance, setDistance] = useState("");
   const [calculatingDistance, setCalculatingDistance] = useState(false);
   const [transactionId, setTransactionId] = useState("");
+  const [orderPlaced, setOrderPlaced] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
   // ==========================================
   // CHECK AUTH & CART
   // ==========================================
+  const location = useLocation();
+
   useEffect(() => {
     if (authLoading) return;
 
     // LOGIN CHECK
     if (!user) {
-      navigate("/login");
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
@@ -177,10 +180,12 @@ export default function Checkout() {
       // CLEAR BACKEND CART
       await clearCart();
 
-      alert("Order Placed Successfully 🎉");
+      setOrderPlaced(true);
 
-      // REDIRECT
-      navigate("/my-orders");
+      // REDIRECT AFTER A DELAY
+      setTimeout(() => {
+        navigate("/my-orders");
+      }, 4000);
     } catch (error) {
       console.log(error);
 
@@ -189,6 +194,23 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  if (orderPlaced) {
+    return (
+      <div className="container-custom py-20 min-h-[70vh] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
+        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 size={48} className="text-green-600" />
+        </div>
+        <h1 className="text-4xl md:text-5xl font-heading font-bold text-dark mb-4">Order Placed Successfully!</h1>
+        <p className="text-gray-500 text-lg mb-8 max-w-md">
+          Thank you for choosing Amrit Dayal Food. Your order has been received and is being processed.
+        </p>
+        <button onClick={() => navigate("/my-orders")} className="bg-primary text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-secondary transition hover:-translate-y-1">
+          View My Orders
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="container-custom py-16">
@@ -377,7 +399,7 @@ export default function Checkout() {
             {cartItems.map((item) => (
               <div key={item._id} className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold">{item.name}</h3>
+                  <h3 className="font-semibold">{item.name} {item.hindiName && <span className="text-gray-500 font-normal">({item.hindiName})</span>}</h3>
 
                   <p className="text-sm text-gray-500">
                     Qty:

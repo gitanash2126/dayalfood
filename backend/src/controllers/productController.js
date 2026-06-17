@@ -8,7 +8,7 @@ const { successResponse } = require("../utils/apiResponse");
 // CREATE PRODUCT
 // ==========================================
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, category, brand, description } = req.body;
+  const { name, hindiName, category, brand, description } = req.body;
   
   let price = Number(req.body.price) || 0;
   let stock = Number(req.body.stock) || 0;
@@ -40,6 +40,7 @@ const createProduct = asyncHandler(async (req, res) => {
   // ==========================================
   const product = await Product.create({
     name,
+    hindiName,
     price,
     category,
     brand,
@@ -150,6 +151,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   // UPDATE FIELDS
   // ==========================================
   product.name = req.body.name || product.name;
+  if (req.body.hindiName !== undefined) {
+    product.hindiName = req.body.hindiName;
+  }
   product.category = req.body.category || product.category;
   product.brand = req.body.brand || product.brand;
   product.description = req.body.description || product.description;

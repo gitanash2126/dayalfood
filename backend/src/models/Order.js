@@ -13,6 +13,11 @@ const orderItemSchema = new mongoose.Schema(
       required: true,
     },
 
+    hindiName: {
+      type: String,
+      default: "",
+    },
+
     imageUrl: {
       type: String,
       default: "",
