@@ -25,11 +25,11 @@ const cookieOptions = {
 // REGISTER USER
 // ==========================================
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, phone, password } = req.body;
+  const { name, email, phone, password } = req.body;
 
-  if (!name || !phone || !password) {
+  if (!name || !email || !phone || !password) {
     res.status(400);
-    throw new Error("Name, phone, and password are required");
+    throw new Error("Name, email, phone, and password are required");
   }
 
   if (password.length < 6) {
@@ -38,9 +38,13 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Check if user already exists
-  const userExists = await User.findOne({ phone });
+  const userExists = await User.findOne({ $or: [{ phone }, { email }] });
 
   if (userExists) {
+    if (userExists.email === email) {
+      res.status(400);
+      throw new Error("User with this email already exists");
+    }
     res.status(400);
     throw new Error("User with this phone number already exists");
   }
@@ -48,6 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // Create user
   const user = await User.create({
     name,
+    email,
     phone,
     password,
     role: "user",

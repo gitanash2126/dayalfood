@@ -97,9 +97,6 @@ export default function Navbar() {
                   onClick={() => setUserMenu(!userMenu)}
                   className="flex items-center gap-2 bg-gray-50 border px-4 py-2 rounded-xl hover:bg-gray-100 transition"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <User size={18} />
-                  </div>
                   <span className="font-semibold text-sm">{user.name}</span>
                 </button>
 

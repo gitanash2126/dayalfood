@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Phone, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Phone, Lock, User, ArrowRight, Eye, EyeOff, Mail } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
@@ -17,6 +17,7 @@ export default function Register() {
   }, [user, navigate]);
 
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +32,10 @@ export default function Register() {
       toast.error("Please enter a valid name");
       return;
     }
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     if (!phone || phone.length < 10) {
       toast.error("Please enter a valid 10-digit mobile number");
       return;
@@ -43,7 +48,7 @@ export default function Register() {
     try {
       setLoading(true);
       
-      const { data } = await API.post("/auth/register", { name, phone, password });
+      const { data } = await API.post("/auth/register", { name, email, phone, password });
       
       const loggedUser = data.data;
       
@@ -100,6 +105,25 @@ export default function Register() {
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Email Address
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Mail size={20} />
+                </span>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
                   required
                 />
