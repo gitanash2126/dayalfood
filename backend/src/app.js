@@ -23,6 +23,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const userRoutes = require("./routes/userRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 const app = express();
 
@@ -160,6 +161,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 
 app.use("/api/users", userRoutes);
+
+app.use("/api/upload", uploadRoutes);
 
 // ==========================================
 // NOT FOUND

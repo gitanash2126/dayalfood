@@ -14,6 +14,8 @@ import ProductDetails from "./pages/ProductDetails";
 
 import Login from "./pages/Login";
 
+import Register from "./pages/Register";
+
 import AdminLogin from "./pages/AdminLogin";
 
 import Cart from "./pages/Cart";
@@ -34,6 +36,8 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminUsers from "./pages/admin/AdminUsers";
 
 import AdminLowStock from "./pages/admin/AdminLowStock";
+
+import AdminTransactions from "./pages/admin/AdminTransactions";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -65,6 +69,8 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
 
+          <Route path="/register" element={<Register />} />
+
           <Route path="/admin-login" element={<AdminLogin />} />
 
           <Route path="/cart" element={<Cart />} />
@@ -88,6 +94,9 @@ export default function App() {
 
             {/* USERS */}
             <Route path="users" element={<AdminUsers />} />
+
+            {/* TRANSACTIONS */}
+            <Route path="transactions" element={<AdminTransactions />} />
           </Route>
         </Routes>
 

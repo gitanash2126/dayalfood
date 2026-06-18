@@ -22,87 +22,96 @@ const cookieOptions = {
 };
 
 // ==========================================
-// SEND OTP (MOBILE LOGIN)
+// REGISTER USER
 // ==========================================
-const sendOtp = asyncHandler(async (req, res) => {
-  const { phone } = req.body;
+const registerUser = asyncHandler(async (req, res) => {
+  const { name, phone, password } = req.body;
 
-  if (!phone) {
+  if (!name || !phone || !password) {
     res.status(400);
-    throw new Error("Phone number is required");
+    throw new Error("Name, phone, and password are required");
   }
 
-  // Generate a dynamic 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  if (password.length < 6) {
+    res.status(400);
+    throw new Error("Password must be at least 6 characters");
+  }
 
-  // Find or create user
-  let user = await User.findOne({ phone });
+  // Check if user already exists
+  const userExists = await User.findOne({ phone });
 
-  if (!user) {
-    user = await User.create({
-      phone,
-      email: `${phone}@dayalfood.com`, // Add dummy email to prevent E11000 duplicate null email error
-      otp,
-      otpExpires,
-      role: "user",
-      isActive: true
+  if (userExists) {
+    res.status(400);
+    throw new Error("User with this phone number already exists");
+  }
+
+  // Create user
+  const user = await User.create({
+    name,
+    phone,
+    password,
+    role: "user",
+    isActive: true,
+  });
+
+  if (user) {
+    // Generate token
+    const token = generateToken(user._id);
+
+    // Set Cookie
+    res.cookie("token", token, cookieOptions);
+
+    successResponse(res, 201, "Registration successful", {
+      _id: user._id,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
     });
   } else {
-    user.otp = otp;
-    user.otpExpires = otpExpires;
-    await user.save();
+    res.status(400);
+    throw new Error("Invalid user data");
   }
-
-  // We are NOT calling any external SMS API to guarantee 100% free operation for now.
-  successResponse(res, 200, "OTP sent successfully", { testOtp: otp });
 });
 
 // ==========================================
-// VERIFY OTP (MOBILE LOGIN)
+// LOGIN USER (PHONE & PASSWORD)
 // ==========================================
-const verifyOtp = asyncHandler(async (req, res) => {
-  const { phone, otp } = req.body;
+const loginUserWithPhone = asyncHandler(async (req, res) => {
+  const { phone, password } = req.body;
 
-  if (!phone || !otp) {
+  if (!phone || !password) {
     res.status(400);
-    throw new Error("Phone number and OTP are required");
+    throw new Error("Phone number and password are required");
   }
 
-  const user = await User.findOne({ phone });
+  const user = await User.findOne({ phone }).select("+password");
 
   if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+    res.status(401);
+    throw new Error("Invalid phone number or password");
   }
 
-  if (user.otp !== otp) {
-    res.status(400);
-    throw new Error("Invalid OTP");
+  const isMatch = await user.matchPassword(password);
+
+  if (!isMatch) {
+    res.status(401);
+    throw new Error("Invalid phone number or password");
   }
 
-  // Clear OTP
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  // ACTIVE CHECK
   if (!user.isActive) {
     res.status(403);
     throw new Error("Your account is inactive");
   }
 
-  // TOKEN
+  // Generate Token
   const token = generateToken(user._id);
 
-  // COOKIE
+  // Set Cookie
   res.cookie("token", token, cookieOptions);
 
-  // RESPONSE
   successResponse(res, 200, "Login successful", {
     _id: user._id,
     name: user.name,
-    email: user.email,
     phone: user.phone,
     role: user.role,
   });
@@ -275,6 +284,43 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 // ==========================================
+// DIRECT RESET PASSWORD (FORGOT PASSWORD)
+// ==========================================
+const resetPasswordDirect = asyncHandler(async (req, res) => {
+  const { name, phone, newPassword } = req.body;
+
+  if (!name || !phone || !newPassword) {
+    res.status(400);
+    throw new Error("Name, mobile number, and new password are required");
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error("New password must be at least 6 characters");
+  }
+
+  // Find user by phone
+  const user = await User.findOne({ phone }).select("+password");
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found with this mobile number");
+  }
+
+  // Verify name (case-insensitive and trimmed)
+  if (user.name.trim().toLowerCase() !== name.trim().toLowerCase()) {
+    res.status(400);
+    throw new Error("Registered name does not match the mobile number");
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  successResponse(res, 200, "Password reset successfully. You can now login.");
+});
+
+// ==========================================
 // MAKE ADMIN
 // ==========================================
 const makeAdmin = asyncHandler(async (req, res) => {
@@ -296,8 +342,8 @@ const makeAdmin = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  sendOtp,
-  verifyOtp,
+  registerUser,
+  loginUserWithPhone,
   loginUser,
 
   logoutUser,
@@ -307,6 +353,8 @@ module.exports = {
   updateProfile,
 
   changePassword,
+  
+  resetPasswordDirect,
 
   makeAdmin,
 };

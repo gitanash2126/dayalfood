@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Phone, CheckCircle, ArrowRight } from "lucide-react";
+import { Phone, Lock, ArrowRight, Eye, EyeOff, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
@@ -16,64 +16,43 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  const [step, setStep] = useState(1);
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Forgot password states
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [name, setName] = useState("");
+
   // ==========================================
-  // SEND OTP (MOCK DEVELOPMENT MODE)
+  // LOGIN USER
   // ==========================================
-  const handleSendOtp = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!phone || phone.length < 10) {
       toast.error("Please enter a valid 10-digit mobile number");
       return;
     }
-
-    try {
-      setLoading(true);
-      // Calls our backend which just returns success without using Fast2SMS
-      const response = await API.post("/auth/send-otp", { phone });
-      
-      const dynamicOtp = response.data.data.testOtp;
-
-      // SHOW AN ALERT SO THE USER ABSOLUTELY CANNOT MISS IT
-      alert(`⚠️ FREE TEST MODE ⚠️\n\nYour OTP is: ${dynamicOtp}\n\n(No real SMS was sent to avoid billing limits)`);
-      
-      setStep(2);
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message || "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ==========================================
-  // VERIFY OTP
-  // ==========================================
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (!otp || otp.length < 6) {
-      toast.error("Please enter a valid 6-digit OTP");
+    if (!password || password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
       return;
     }
 
     try {
       setLoading(true);
       
-      const { data } = await API.post("/auth/verify-otp", { phone, otp });
+      const { data } = await API.post("/auth/login-phone", { phone, password });
       
-      const user = data.data;
+      const loggedUser = data.data;
       
       // Login context
-      login(user);
-      localStorage.setItem("user", JSON.stringify(user));
+      login(loggedUser);
+      localStorage.setItem("user", JSON.stringify(loggedUser));
       
       toast.success("Login Successful");
       
-      if (user.role === "admin") {
+      if (loggedUser.role === "admin") {
         navigate("/admin");
       } else {
         const fromPath = typeof location.state?.from === 'string' ? location.state.from : (location.state?.from?.pathname || "/");
@@ -81,7 +60,39 @@ export default function Login() {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Invalid OTP code");
+      toast.error(error.response?.data?.message || "Invalid mobile number or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // RESET PASSWORD
+  // ==========================================
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!name || name.trim().length < 3) {
+      toast.error("Please enter your registered name");
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      toast.error("Please enter a valid 10-digit mobile number");
+      return;
+    }
+    if (!password || password.length < 6) {
+      toast.error("New password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await API.post("/auth/reset-password-direct", { name, phone, newPassword: password });
+      toast.success(data.message || "Password reset successful");
+      setIsForgotPassword(false);
+      setPassword("");
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -98,87 +109,184 @@ export default function Login() {
         {/* TOP */}
         <div className="bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-500 px-10 py-12 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-sm mix-blend-overlay"></div>
-          <h1 className="font-heading text-5xl text-white relative z-10 drop-shadow-md">Login</h1>
+          <h1 className="font-heading text-5xl text-white relative z-10 drop-shadow-md">
+            {isForgotPassword ? "Reset Password" : "Login"}
+          </h1>
           <p className="text-orange-50 mt-5 text-lg leading-8 relative z-10 drop-shadow-sm font-medium">
-            Login with your mobile number to continue shopping.
+            {isForgotPassword 
+              ? "Verify your details to create a new password." 
+              : "Login with your mobile number to continue shopping."}
           </p>
         </div>
 
         {/* FORM AREA */}
         <div className="p-10">
-          {step === 1 ? (
-            <form onSubmit={handleSendOtp} className="space-y-7">
-              <div>
-                <label className="block mb-3 font-semibold text-dark">
-                  Mobile Number
-                </label>
-                <div className="relative">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    placeholder="Enter your 10-digit number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-16 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 tracking-widest font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-secondary text-white py-4 rounded-2xl text-lg font-semibold transition shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {loading ? "Sending OTP..." : "Get OTP"}
-                {!loading && <ArrowRight size={20} />}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-7">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block font-semibold text-dark">
-                    Enter OTP
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(1);
-                      setOtp("");
-                    }}
-                    className="text-sm font-semibold text-primary hover:underline"
-                  >
-                    Change Number
-                  </button>
-                </div>
+          {!isForgotPassword ? (
+            <form onSubmit={handleLogin} className="space-y-7">
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Mobile Number
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Phone size={20} />
+                </span>
                 <input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none px-5 py-4 rounded-2xl text-lg transition-all duration-300 text-center tracking-[0.5em] font-bold bg-white/70 backdrop-blur-sm hover:border-orange-300"
-                  maxLength={6}
+                  type="tel"
+                  placeholder="Enter your 10-digit number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  maxLength={10}
                   required
-                  autoFocus
                 />
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-lg font-semibold transition shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Password
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Lock size={20} />
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-14 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              <div className="text-right mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setPassword("");
+                  }}
+                  className="text-primary font-bold hover:underline text-sm"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-secondary text-white py-4 rounded-2xl text-lg font-semibold transition shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? "Logging in..." : "Login"}
+              {!loading && <ArrowRight size={20} />}
+            </button>
+          </form>
+          ) : (
+          <form onSubmit={handleResetPassword} className="space-y-7">
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Registered Mobile Number
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Phone size={20} />
+                </span>
+                <input
+                  type="tel"
+                  placeholder="Enter your 10-digit number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  maxLength={10}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Registered Name
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <User size={20} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-5 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-3 font-semibold text-dark">
+                Create New Password
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">
+                  <Lock size={20} />
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none pl-14 pr-14 py-4 rounded-2xl text-lg transition-all duration-300 font-semibold bg-white/70 backdrop-blur-sm hover:border-orange-300"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-secondary text-white py-4 rounded-2xl text-lg font-semibold transition shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? "Resetting..." : "Reset Password"}
+              {!loading && <ArrowRight size={20} />}
+            </button>
+            
+            <div className="text-center mt-4">
+              <button 
+                type="button" 
+                onClick={() => setIsForgotPassword(false)}
+                className="text-gray-500 hover:text-dark font-semibold transition"
               >
-                {loading ? "Verifying..." : "Verify & Login"}
-                {!loading && <CheckCircle size={20} />}
+                Back to Login
               </button>
-            </form>
+            </div>
+          </form>
           )}
 
-          {/* Admin Login Link Removed As Requested */}
+          {/* REGISTER LINK */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 font-medium text-lg">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary font-bold hover:underline">
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

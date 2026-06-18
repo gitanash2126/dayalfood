@@ -138,7 +138,28 @@ export default function Cart() {
               <div className="bg-white rounded-[40px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-gray-100 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
                 
-                <h2 className="text-2xl font-bold font-heading text-dark mb-8">Order Summary</h2>
+                <h2 className="text-2xl font-bold font-heading text-dark mb-6">Order Summary</h2>
+
+                {/* FREE SHIPPING PROGRESS IN CART */}
+                <div className="mb-6 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                  {Number(cartTotal) > 399 ? (
+                    <p className="text-green-600 font-bold text-sm text-center">
+                      🎉 You have unlocked Free Delivery!
+                    </p>
+                  ) : (
+                    <div>
+                      <p className="font-bold text-dark text-sm mb-2 text-center">
+                        Add <span className="text-primary">₹{399 - Number(cartTotal)}</span> more for Free Delivery
+                      </p>
+                      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary transition-all duration-500 rounded-full" 
+                          style={{ width: `${Math.min((Number(cartTotal) / 399) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-6">
                   {/* SUBTOTAL */}
@@ -150,7 +171,11 @@ export default function Cart() {
                   {/* SHIPPING */}
                   <div className="flex justify-between items-center text-gray-600 font-medium">
                     <span>Shipping Estimate</span>
-                    <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm">Free Delivery</span>
+                    {Number(cartTotal) > 399 ? (
+                      <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm">Free Delivery</span>
+                    ) : (
+                      <span className="text-dark font-bold text-sm">₹49</span>
+                    )}
                   </div>
 
                   <div className="w-full h-px bg-gray-100 my-2"></div>
@@ -159,7 +184,7 @@ export default function Cart() {
                   <div className="flex justify-between items-end">
                     <span className="text-lg font-bold text-dark">Total Amount</span>
                     <span className="text-4xl font-black text-primary tracking-tight">
-                      ₹{Number(cartTotal || 0).toFixed(0)}
+                      ₹{(Number(cartTotal || 0) + (Number(cartTotal) > 399 ? 0 : 49)).toFixed(0)}
                     </span>
                   </div>
                 </div>

@@ -10,9 +10,12 @@ import { useCart } from "../context/CartContext";
 
 import API from "../api/axios";
 
-import { getProductImage } from "../utils/productImages";
+import { getProductImages } from "../utils/productImages";
 
 import { getProductBaseName } from "../utils/productHelpers";
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ProductDetails() {
   const { slug } = useParams();
@@ -36,11 +39,20 @@ export default function ProductDetails() {
 
   const [quantity, setQuantity] = useState(1);
 
+  const { user } = useAuth();
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [ratingInput, setRatingInput] = useState(5);
+  const [commentInput, setCommentInput] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   // ==========================================
   // FETCH PRODUCT
   // ==========================================
   useEffect(() => {
     if (slug) {
+      setActiveImageIndex(0);
+      setRatingInput(5);
+      setCommentInput("");
       fetchProduct();
     }
   }, [slug]);
@@ -152,7 +164,7 @@ export default function ProductDetails() {
   // PRODUCT IMAGE MATCHING
   // ==========================================
   const productName = product?.name?.toLowerCase()?.trim() || "";
-  const imageUrl = getProductImage(productName, product?.imageUrl || product?.image);
+  const imagesArray = getProductImages(productName, product?.imageUrl || product?.image);
 
   // ==========================================
   // ADD TO CART
@@ -173,17 +185,50 @@ export default function ProductDetails() {
     });
   };
 
+  // ==========================================
+  // SUBMIT REVIEW
+  // ==========================================
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to submit a review");
+      navigate("/login");
+      return;
+    }
+    if (!commentInput.trim()) {
+      toast.error("Review comment cannot be empty");
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      await API.post(`/products/${product._id}/reviews`, {
+        rating: ratingInput,
+        comment: commentInput,
+      });
+      toast.success("Review submitted successfully");
+      setCommentInput("");
+      setRatingInput(5);
+      fetchProduct(); // Refresh product data to see new review
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <div className="bg-[#fffdf8] overflow-hidden">
       {/* PRODUCT */}
       <section className="py-6 sm:py-10 lg:py-12">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
-            {/* IMAGE */}
+            {/* IMAGE SLIDER */}
             <div className="lg:sticky lg:top-28 h-fit">
-              <div className="bg-white rounded-[28px] lg:rounded-[36px] overflow-hidden border border-orange-100 shadow-xl">
+              <div className="bg-white rounded-[28px] lg:rounded-[36px] overflow-hidden border border-orange-100 shadow-xl relative group">
                 <img
-                  src={imageUrl}
+                  src={imagesArray[activeImageIndex]}
                   alt={product?.name}
                   loading="lazy"
                   className="w-full h-[250px] sm:h-[350px] lg:h-[450px] object-cover hover:scale-105 transition duration-500"
@@ -191,6 +236,35 @@ export default function ProductDetails() {
                     e.target.src = "/images/no-image.png";
                   }}
                 />
+                
+                {/* SLIDER CONTROLS */}
+                {imagesArray.length > 1 && (
+                  <>
+                    <button 
+                      onClick={() => setActiveImageIndex(prev => prev === 0 ? imagesArray.length - 1 : prev - 1)}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-dark p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button 
+                      onClick={() => setActiveImageIndex(prev => prev === imagesArray.length - 1 ? 0 : prev + 1)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-dark p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                    
+                    {/* DOTS */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {imagesArray.map((_, idx) => (
+                        <button 
+                          key={idx}
+                          onClick={() => setActiveImageIndex(idx)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${activeImageIndex === idx ? "bg-primary w-6" : "bg-white/70 hover:bg-white"}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -332,6 +406,86 @@ export default function ProductDetails() {
                 >
                   Buy Now
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* REVIEWS SECTION */}
+          <div className="mt-24 bg-white rounded-[32px] shadow-xl border border-gray-100 p-8 sm:p-12">
+            <h2 className="font-heading text-3xl text-dark mb-8 border-b pb-4">Ratings & Reviews</h2>
+            
+            <div className="grid lg:grid-cols-3 gap-10">
+              {/* WRITE REVIEW */}
+              <div className="lg:col-span-1 bg-gray-50 p-6 rounded-2xl border border-gray-100 h-fit">
+                <h3 className="font-bold text-lg mb-4 text-dark">Write a Review</h3>
+                {!user ? (
+                   <p className="text-gray-500 mb-4">Please log in to share your experience with this product.</p>
+                ) : (
+                  <form onSubmit={handleSubmitReview} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Rating</label>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button 
+                            type="button"
+                            key={star}
+                            onClick={() => setRatingInput(star)}
+                            className="focus:outline-none"
+                          >
+                            <Star size={24} className={star <= ratingInput ? "fill-yellow-400 text-yellow-400" : "text-gray-300 hover:text-yellow-200"} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Your Comment</label>
+                      <textarea 
+                        rows={3} 
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        placeholder="Tell us what you think..."
+                        className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:border-primary resize-none"
+                        required
+                      ></textarea>
+                    </div>
+                    <button 
+                      type="submit" 
+                      disabled={submittingReview}
+                      className="w-full bg-primary hover:bg-secondary text-white py-3 rounded-xl font-bold transition disabled:opacity-70"
+                    >
+                      {submittingReview ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* REVIEWS LIST */}
+              <div className="lg:col-span-2 space-y-6">
+                {product.reviews && product.reviews.length > 0 ? (
+                  product.reviews.map((review) => (
+                    <div key={review._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-dark">{review.name}</h4>
+                        <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={14}
+                            className={star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <Star size={40} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">No reviews yet. Be the first to review!</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

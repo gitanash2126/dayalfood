@@ -32,6 +32,7 @@ const createOrder = asyncHandler(async (req, res) => {
     shippingAddress,
     paymentMethod,
     transactionId,
+    paymentScreenshot,
     itemsPrice,
     taxPrice,
     shippingPrice,
@@ -96,6 +97,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     paymentMethod,
     transactionId: transactionId || "",
+    paymentScreenshot: paymentScreenshot || "",
 
     itemsPrice,
 

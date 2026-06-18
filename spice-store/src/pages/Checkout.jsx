@@ -36,7 +36,7 @@ export default function Checkout() {
 
   const [distance, setDistance] = useState("");
   const [calculatingDistance, setCalculatingDistance] = useState(false);
-  const [transactionId, setTransactionId] = useState("");
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -119,9 +119,9 @@ export default function Checkout() {
   // SHIPPING & DISCOUNT
   const discount = paymentMethod === "Online" ? Number(cartTotal) * 0.05 : 0;
   
-  let shippingCharge = 0;
-  if (distance !== "") {
-    shippingCharge = Number(distance) <= 5 ? 49 : 99;
+  let shippingCharge = 49; // Flat rate
+  if (Number(cartTotal) > 399) {
+    shippingCharge = 0; // Free shipping above 399
   }
 
   const finalTotal = Math.round(Number(cartTotal) - discount + shippingCharge);
@@ -132,8 +132,8 @@ export default function Checkout() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    if (paymentMethod === "Online" && (!transactionId || transactionId.length < 10)) {
-      alert("Please enter a valid Transaction / UTR ID for your Online Payment.");
+    if (paymentMethod === "Online" && !paymentScreenshot) {
+      alert("Please upload a screenshot of your payment.");
       return;
     }
 
@@ -147,28 +147,36 @@ export default function Checkout() {
         quantity: item.quantity,
       }));
 
+      let screenshotUrl = "";
+
+      // UPLOAD SCREENSHOT IF ONLINE PAYMENT
+      if (paymentMethod === "Online" && paymentScreenshot) {
+        const formData = new FormData();
+        formData.append("image", paymentScreenshot);
+
+        const uploadRes = await API.post("/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        
+        screenshotUrl = uploadRes.data.data.url;
+      }
+
       // API CALL
       const { data } = await API.post("/orders", {
         orderItems,
 
         shippingAddress: {
           fullName,
-
           phone,
-
           address,
-
           city,
-
           state,
-
           postalCode,
-
           country: "India",
         },
 
         paymentMethod,
-        transactionId: paymentMethod === "Online" ? transactionId : "",
+        paymentScreenshot: screenshotUrl,
         itemsPrice: cartTotal,
         shippingPrice: shippingCharge,
         taxPrice: 0,
@@ -215,7 +223,7 @@ export default function Checkout() {
   return (
     <div className="container-custom py-16">
       {/* TITLE */}
-      <div className="flex items-center gap-4 mb-10">
+      <div className="flex items-center gap-4 mb-6">
         <div className="bg-primary/10 p-4 rounded-2xl">
           <ShoppingBag className="text-primary" />
         </div>
@@ -224,6 +232,30 @@ export default function Checkout() {
           <h1 className="font-heading text-5xl">Checkout</h1>
 
           <p className="text-gray-500 mt-2">Complete your order details</p>
+        </div>
+      </div>
+
+      {/* FREE SHIPPING PROGRESS */}
+      <div className="mb-10 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-4 justify-between">
+        <div className="flex-1 w-full">
+          {Number(cartTotal) > 399 ? (
+             <div className="flex items-center gap-3 text-green-600 font-bold">
+               <span className="bg-green-100 p-2 rounded-full"><CheckCircle2 size={20} /></span>
+               <span>Congratulations! You get FREE Delivery on this order.</span>
+             </div>
+          ) : (
+             <div>
+               <p className="font-bold text-dark mb-2">
+                 Add items worth <span className="text-primary">₹{399 - Number(cartTotal)}</span> more to get <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md">Free Delivery</span>
+               </p>
+               <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                 <div 
+                   className="h-full bg-primary transition-all duration-500 rounded-full" 
+                   style={{ width: `${Math.min((Number(cartTotal) / 399) * 100, 100)}%` }}
+                 ></div>
+               </div>
+             </div>
+          )}
         </div>
       </div>
 
@@ -356,25 +388,38 @@ export default function Checkout() {
                 {/* DYNAMIC UPI QR CODE */}
                 <div className="bg-white p-3 rounded-2xl inline-block shadow-md border border-gray-100 mb-4">
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=7275060800@paytm&pn=Amrit%20Dayal%20Food&am=${finalTotal}&cu=INR`} 
-                    alt="UPI QR Code" 
-                    className="w-40 h-40 object-contain mx-auto"
+                    src="/payment-qr.jpeg" 
+                    alt="Scan & Pay Using PhonePe App" 
+                    className="w-64 object-contain mx-auto rounded-lg"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=7275060800@paytm&pn=Amrit%20Dayal%20Food&am=${finalTotal}&cu=INR`;
+                    }}
                   />
                 </div>
                 
                 <p className="text-primary font-bold text-xl mb-6">Amount: ₹{finalTotal}</p>
 
-                <div className="text-left">
-                  <label className="text-sm font-bold text-gray-700 block mb-2">Enter Transaction ID / UTR No. *</label>
+                <div className="text-left bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <label className="text-sm font-bold text-gray-700 block mb-2">Upload Payment Screenshot *</label>
                   <input
-                    type="text"
-                    placeholder="e.g. 301234567890"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-primary font-medium tracking-wide"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPaymentScreenshot(e.target.files[0])}
+                    className="w-full text-sm text-gray-500
+                      file:mr-4 file:py-3 file:px-4
+                      file:rounded-xl file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-primary file:text-white
+                      hover:file:bg-secondary transition cursor-pointer"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-2">Required to verify your payment. Your order will be processed after verification.</p>
+                  {paymentScreenshot && (
+                    <p className="text-xs text-green-600 font-semibold mt-2">
+                      Selected: {paymentScreenshot.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">Required to verify your payment. Admin will review the screenshot.</p>
                 </div>
               </div>
             )}

@@ -15,7 +15,7 @@ import localProducts from "../data/products.js";
 import heroImg from "../assets/products/mishritkhadamasala.jpeg";
 import offerImg from "../assets/products/badiilaichi.jpeg";
 import wholeSpicesImg from "../assets/products/khadamasala.jpeg";
-import groundSpicesImg from "../assets/products/haldi.jpeg";
+import groundSpicesImg from "../assets/products/Haldi powder.jpeg";
 import masalaBlendsImg from "../assets/products/garammasala.jpeg";
 import seedsImg from "../assets/products/jeera.jpeg";
 

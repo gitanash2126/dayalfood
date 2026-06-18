@@ -99,6 +99,11 @@ const orderSchema = new mongoose.Schema(
       default: "",
     },
 
+    paymentScreenshot: {
+      type: String,
+      default: "",
+    },
+
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Failed", "Refunded"],

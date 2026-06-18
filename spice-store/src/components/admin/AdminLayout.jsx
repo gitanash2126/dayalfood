@@ -7,6 +7,7 @@ import {
   LogOut,
   Menu,
   X,
+  CreditCard,
 } from "lucide-react";
 
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -61,6 +62,14 @@ export default function AdminLayout() {
       path: "/admin/users",
 
       icon: Users,
+    },
+
+    {
+      name: "Transactions",
+
+      path: "/admin/transactions",
+
+      icon: CreditCard,
     },
 
     // LOW STOCK

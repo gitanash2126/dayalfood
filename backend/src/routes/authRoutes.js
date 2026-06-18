@@ -1,12 +1,13 @@
 const express = require("express");
 
 const {
-  sendOtp,
-  verifyOtp,
+  registerUser,
+  loginUserWithPhone,
   loginUser,
   getProfile,
   updateProfile,
   changePassword,
+  resetPasswordDirect,
   makeAdmin,
 } = require("../controllers/authController");
 
@@ -18,10 +19,12 @@ const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtp);
+router.post("/register", registerUser);
+router.post("/login-phone", loginUserWithPhone);
 
 router.post("/login", validateLogin, loginUser);
+
+router.post("/reset-password-direct", resetPasswordDirect);
 
 router.get("/profile", protect, getProfile);
 

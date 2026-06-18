@@ -32,7 +32,9 @@ import yellowmustard from "../assets/products/yellowmustard.jpeg";
 import bhunaJeeraPowder from "../assets/products/Bhuna Jeera Powder.JPG";
 import chatMasala from "../assets/products/Chat Masala.JPG";
 import dhaniyaWhole from "../assets/products/Dhania whole.JPG";
+import dhaniyaPowderJpg from "../assets/products/dhaniya powder.jpg";
 import haldiJpg from "../assets/products/Haldi.JPG";
+import haldiPowderJpeg from "../assets/products/Haldi powder.jpeg";
 import hingPremium from "../assets/products/Hing Premium Box.JPG";
 import compoundingHing from "../assets/products/Compunding Hing.jpg";
 import kachoriAtta from "../assets/products/Kachori Atta.JPG";
@@ -41,6 +43,7 @@ import kaliMirchPowderJpg from "../assets/products/Kali Mirch Powder.JPG";
 import kaliMirchWhole from "../assets/products/Kali Mirch whole.JPG";
 import khadaMasalaJpg from "../assets/products/Khada Masala.JPG";
 import lalMirchPowder from "../assets/products/Lal Mirch Powder.JPG";
+import mirchiPowder2 from "../assets/products/mirchi powder 2.jpg";
 import sabziMasala from "../assets/products/Sabzi Masala.JPG";
 import postodana from "../assets/products/posto dana.jpg";
 
@@ -53,11 +56,11 @@ export const productImages = {
   clove: clove,
   dhaniya: dhaniya,
   "dhaniya powder": dhaniya,
-  "dhaniya whole": dhaniyaWhole,
-  "dhania whole": dhaniyaWhole, // alias
+  "dhaniya whole": dhaniyaPowderJpg,
+  "dhania whole": dhaniyaPowderJpg, // alias
 
   "garam masala": garammasala,
-  haldi: haldiJpg,
+  haldi: haldiPowderJpeg,
   
   "hing premium box": hingPremium,
   "hing premium": hingPremium,
@@ -87,10 +90,10 @@ export const productImages = {
   
   methi: methi,
   
-  "mirchi powder": lalMirchPowder, // User asked to fix mirchi powder image
-  "mirch powder": lalMirchPowder,
-  "lal mirch powder": lalMirchPowder,
-  "lal mirch": lalMirchPowder,
+  "mirchi powder": mirchiPowder2, // User requested powder image first
+  "mirch powder": mirchiPowder2,
+  "lal mirch powder": mirchiPowder2,
+  "lal mirch": mirchiPowder2,
 
   "mishrit khada masala": mishritkhadamasala,
   
@@ -152,6 +155,27 @@ export const getProductImage = (name, fallbackImage) => {
   }
   
   return fallbackImage || "/images/no-image.png";
+};
+
+// Returns an array of images for carousel usage
+export const getProductImages = (name, fallbackImage) => {
+  const mainImage = getProductImage(name, fallbackImage);
+  const searchName = name?.toLowerCase()?.trim() || "";
+  
+  if (searchName.includes("haldi") && !searchName.includes("safed")) {
+    return [mainImage, haldiJpg];
+  }
+  
+  if (searchName.includes("dhaniya whole") || searchName.includes("dhania whole")) {
+    return [mainImage, dhaniyaWhole];
+  }
+  
+  if ((searchName.includes("mirch powder") || searchName.includes("mirchi powder") || searchName.includes("lal mirch")) && 
+      !searchName.includes("safed") && !searchName.includes("kali")) {
+    return [mainImage, lalMirchPowder];
+  }
+  
+  return [mainImage];
 };
 
 export default productImages;
