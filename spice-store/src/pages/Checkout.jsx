@@ -117,7 +117,7 @@ export default function Checkout() {
   }, [postalCode, city]);
 
   // SHIPPING & DISCOUNT
-  const discount = paymentMethod === "Online" ? Number(cartTotal) * 0.05 : 0;
+  const discount = paymentMethod === "Online" ? Number(cartTotal) * 0.10 : 0;
   
   let shippingCharge = 49; // Flat rate
   if (Number(cartTotal) > 399) {
@@ -374,7 +374,7 @@ export default function Checkout() {
                     : "border-gray-100 text-gray-500 hover:border-orange-200 hover:bg-orange-50/50"
                 }`}
               >
-                Online (5% OFF)
+                Online (10% OFF)
               </button>
             </div>
 
@@ -479,7 +479,7 @@ export default function Checkout() {
 
             {discount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Online Discount (5%)</span>
+                <span>Online Discount (10%)</span>
                 <span className="font-semibold">-₹{Math.round(discount)}</span>
               </div>
             )}
