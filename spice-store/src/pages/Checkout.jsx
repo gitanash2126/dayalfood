@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { ShoppingBag, MapPin, Phone, User, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, MapPin, Phone, User, CheckCircle2, Plus } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
 
@@ -41,6 +41,11 @@ export default function Checkout() {
 
   const [loading, setLoading] = useState(false);
 
+  // SAVED ADDRESSES
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [isAddingNew, setIsAddingNew] = useState(false);
+
   // ==========================================
   // CHECK AUTH & CART
   // ==========================================
@@ -60,10 +65,47 @@ export default function Checkout() {
       navigate("/cart");
     }
 
-    // AUTO FILL
-    setFullName(user.name || "");
-    setPhone(user.phone || "");
+    // FETCH SAVED ADDRESSES
+    const fetchAddresses = async () => {
+      try {
+        const { data } = await API.get("/users/addresses");
+        if (data?.data && data.data.length > 0) {
+          setSavedAddresses(data.data);
+          const def = data.data.find(a => a.isDefault) || data.data[0];
+          setSelectedAddressId(def._id);
+          setFullName(def.fullName);
+          setPhone(def.phone);
+          setAddress(def.address);
+          setCity(def.city);
+          setState(def.state);
+          setPostalCode(def.postalCode);
+        } else {
+          setIsAddingNew(true);
+          setFullName(user.name || "");
+          setPhone(user.phone || "");
+        }
+      } catch (err) {
+        setIsAddingNew(true);
+        setFullName(user.name || "");
+        setPhone(user.phone || "");
+      }
+    };
+    fetchAddresses();
   }, [user, authLoading, cartItems, navigate]);
+
+  const handleSelectAddress = (id) => {
+    setSelectedAddressId(id);
+    setIsAddingNew(false);
+    const def = savedAddresses.find(a => a._id === id);
+    if (def) {
+      setFullName(def.fullName);
+      setPhone(def.phone);
+      setAddress(def.address);
+      setCity(def.city);
+      setState(def.state);
+      setPostalCode(def.postalCode);
+    }
+  };
 
   // ==========================================
   // AUTO CALCULATE DISTANCE
@@ -161,6 +203,17 @@ export default function Checkout() {
         screenshotUrl = uploadRes.data.data.url;
       }
 
+      // SAVE NEW ADDRESS IF NEEDED
+      if (isAddingNew) {
+        try {
+          await API.post("/users/addresses", {
+            fullName, phone, address, city, state, postalCode, country: "India", isDefault: true
+          });
+        } catch (err) {
+          console.log("Failed to save address", err);
+        }
+      }
+
       // API CALL
       const { data } = await API.post("/orders", {
         orderItems,
@@ -190,10 +243,10 @@ export default function Checkout() {
 
       setOrderPlaced(true);
 
-      // REDIRECT AFTER A DELAY
+      // REDIRECT AFTER A VERY SHORT DELAY TO FEEL FASTER
       setTimeout(() => {
         navigate("/my-orders");
-      }, 4000);
+      }, 500);
     } catch (error) {
       console.log(error);
 
@@ -265,86 +318,78 @@ export default function Checkout() {
           onSubmit={handlePlaceOrder}
           className="bg-white p-8 rounded-[32px] shadow-xl space-y-5"
         >
-          {/* FULL NAME */}
-          <div>
-            <label className="font-semibold flex items-center gap-2 mb-2">
-              <User size={18} />
-              Full Name
-            </label>
+          {/* ADDRESS SELECTION */}
+          {savedAddresses.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-bold text-xl flex items-center gap-2 mb-4">
+                <MapPin size={22} className="text-primary"/> Select Delivery Address
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {savedAddresses.map((addr) => (
+                  <div 
+                    key={addr._id} 
+                    onClick={() => handleSelectAddress(addr._id)}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition relative ${selectedAddressId === addr._id && !isAddingNew ? "border-primary bg-orange-50" : "border-gray-100 hover:border-orange-200"}`}
+                  >
+                    {selectedAddressId === addr._id && !isAddingNew && (
+                      <div className="absolute top-3 right-3 text-primary"><CheckCircle2 size={20}/></div>
+                    )}
+                    <p className="font-bold text-dark text-lg">{addr.fullName}</p>
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">{addr.address}, {addr.city}, {addr.state} - {addr.postalCode}</p>
+                    <p className="text-sm font-semibold text-gray-700 mt-2 flex items-center gap-1"><Phone size={14}/> {addr.phone}</p>
+                  </div>
+                ))}
+              </div>
+              {!isAddingNew && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setIsAddingNew(true);
+                    setSelectedAddressId("");
+                    setFullName(user.name || "");
+                    setPhone(user.phone || "");
+                    setAddress(""); setCity(""); setState(""); setPostalCode("");
+                  }} 
+                  className="mt-4 flex items-center gap-2 text-primary font-bold hover:bg-primary/10 px-4 py-2 rounded-xl transition"
+                >
+                  <Plus size={18}/> Add New Address
+                </button>
+              )}
+            </div>
+          )}
 
-            <input
-              type="text"
-              placeholder="Enter Full Name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-              required
-            />
-          </div>
+          {(isAddingNew || savedAddresses.length === 0) && (
+            <div className="space-y-5 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+              <div className="flex items-center justify-between mb-2">
+                 <h3 className="font-bold text-xl text-dark">Enter New Address</h3>
+                 {savedAddresses.length > 0 && (
+                    <button type="button" onClick={() => handleSelectAddress(savedAddresses[0]._id)} className="text-sm font-bold text-gray-500 hover:text-red-500">Cancel</button>
+                 )}
+              </div>
+              
+              <div>
+                <label className="font-semibold flex items-center gap-2 mb-2"><User size={18} /> Full Name</label>
+                <input type="text" placeholder="Enter Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+              </div>
 
-          {/* PHONE */}
-          <div>
-            <label className="font-semibold flex items-center gap-2 mb-2">
-              <Phone size={18} />
-              Phone Number
-            </label>
+              <div>
+                <label className="font-semibold flex items-center gap-2 mb-2"><Phone size={18} /> Phone Number</label>
+                <input type="text" placeholder="Enter Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+              </div>
 
-            <input
-              type="text"
-              placeholder="Enter Phone Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-              required
-            />
-          </div>
-
-          {/* ADDRESS */}
-          <div>
-            <label className="font-semibold flex items-center gap-2 mb-2">
-              <MapPin size={18} />
-              Address
-            </label>
-
-            <textarea
-              placeholder="Enter Complete Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={4}
-              className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-              required
-            />
-          </div>
-
-          {/* CITY */}
-          <input
-            type="text"
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-            required
-          />
-
-          {/* STATE */}
-          <input
-            type="text"
-            placeholder="State"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-            required
-          />
-
-          {/* PINCODE */}
-          <input
-            type="text"
-            placeholder="Postal Code"
-            value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
-            className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary"
-            required
-          />
+              <div>
+                <label className="font-semibold flex items-center gap-2 mb-2"><MapPin size={18} /> Complete Address</label>
+                <textarea placeholder="House No, Building, Street, Area" value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+                <input type="text" placeholder="State" value={state} onChange={(e) => setState(e.target.value)} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+              </div>
+              
+              <input type="text" placeholder="Postal Code (6 digits)" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="w-full border rounded-2xl px-5 py-4 outline-none focus:border-primary" required />
+            </div>
+          )}
 
           {/* PAYMENT */}
           <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">

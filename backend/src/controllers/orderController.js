@@ -10,15 +10,7 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const { successResponse } = require("../utils/apiResponse");
 
-const twilio = require("twilio");
-
-// ==========================================
-// TWILIO CLIENT
-// ==========================================
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN,
-);
+const sendEmail = require("../utils/sendEmail");
 
 // ==========================================
 // CREATE ORDER
@@ -108,29 +100,7 @@ const createOrder = asyncHandler(async (req, res) => {
     totalPrice,
   });
 
-  // ==========================================
-  // AUTO UPDATE USER PROFILE
-  // ==========================================
-  const dbUser = await User.findById(req.user._id);
-  if (dbUser) {
-    if (dbUser.name === "User" || !dbUser.name) {
-      dbUser.name = shippingAddress.fullName;
-    }
-    
-    // Auto-update address list if empty or just overwrite default
-    dbUser.addresses = [
-      {
-        fullName: shippingAddress.fullName,
-        phone: shippingAddress.phone,
-        address: shippingAddress.address,
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        postalCode: shippingAddress.postalCode,
-        isDefault: true,
-      }
-    ];
-    await dbUser.save({ validateBeforeSave: false });
-  }
+
 
   // ==========================================
   // UPDATE STOCK
@@ -144,59 +114,66 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   // ==========================================
-  // WHATSAPP NOTIFICATION
+  // EMAIL NOTIFICATION
   // ==========================================
   try {
-    console.log("WHATSAPP FUNCTION STARTED");
+    console.log("EMAIL NOTIFICATION STARTED");
 
-    console.log("TWILIO SID:", process.env.TWILIO_ACCOUNT_SID);
+    const productsHtml = validatedItems
+      .map((item) => `<li><strong>${item.name}</strong> (Qty: ${item.quantity}) - ₹${item.price * item.quantity}</li>`)
+      .join("");
 
-    console.log("TWILIO NUMBER:", process.env.TWILIO_WHATSAPP_NUMBER);
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <div style="background-color: #f97316; padding: 20px; text-align: center; color: white;">
+              <h1 style="margin: 0; font-size: 24px;">🛒 New Order Received!</h1>
+          </div>
+          <div style="padding: 30px; background-color: #ffffff;">
+              <div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f3f4f6;">
+                  <h3 style="margin-top: 0; color: #374151;">👤 Customer Details</h3>
+                  <p style="margin: 5px 0;"><strong>Name:</strong> ${shippingAddress.fullName}</p>
+                  <p style="margin: 5px 0;"><strong>Phone:</strong> ${shippingAddress.phone}</p>
+                  <p style="margin: 5px 0;"><strong>Address:</strong> ${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.postalCode}</p>
+              </div>
+              
+              <div style="margin-bottom: 25px;">
+                  <h3 style="color: #374151;">📦 Ordered Products</h3>
+                  <ul style="list-style-type: none; padding-left: 0;">
+                      ${productsHtml}
+                  </ul>
+              </div>
+              
+              <div style="background-color: #fff7ed; padding: 20px; border-radius: 8px; border-left: 4px solid #f97316;">
+                  <h2 style="margin: 0; color: #9a3412;">💰 Total Amount: ₹${totalPrice}</h2>
+                  <p style="margin: 10px 0 0 0; color: #c2410c;"><strong>💳 Payment Method:</strong> ${paymentMethod}</p>
+              </div>
+          </div>
+          <div style="background-color: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">Log in to the Admin Dashboard to manage this order.</p>
+          </div>
+      </div>
+    `;
 
-    console.log("OWNER NUMBER:", process.env.OWNER_WHATSAPP_NUMBER);
+    const ownerEmail = process.env.EMAIL_USER;
 
-    const productsText = validatedItems
-      .map((item) => `• ${item.name} x ${item.quantity}`)
-      .join("\n");
-
-    const message = `
-🛒 NEW ORDER RECEIVED
-
-👤 Customer:
-${shippingAddress.fullName}
-
-📞 Phone:
-${shippingAddress.phone}
-
-📍 Address:
-${shippingAddress.address},
-${shippingAddress.city},
-${shippingAddress.state}
-
-📦 Products:
-${productsText}
-
-💰 Total:
-₹${totalPrice}
-
-💳 Payment:
-${paymentMethod}
-`;
-
-    const response = await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_NUMBER,
-
-      to: process.env.OWNER_WHATSAPP_NUMBER,
-
-      body: message,
-    });
-
-    console.log("WhatsApp notification sent successfully");
-
-    console.log("Message SID:", response.sid);
+    if (ownerEmail) {
+        // Run asynchronously without awaiting so it doesn't slow down the Place Order button
+        sendEmail({
+            to: ownerEmail,
+            subject: `🚀 New Order: ₹${totalPrice} by ${shippingAddress.fullName}`,
+            html: emailHtml
+        }).then((response) => {
+            if (response.success) {
+                console.log("Email notification sent successfully to Owner");
+            } else {
+                console.error("Email notification failed:", response.error);
+            }
+        }).catch((err) => console.log("Email send error", err));
+    } else {
+        console.log("No EMAIL_USER defined. Skipping notification.");
+    }
   } catch (error) {
-    console.log("WhatsApp Error:", error.message);
-
+    console.log("Email Error:", error.message);
     console.log("Full Error:", error);
   }
 

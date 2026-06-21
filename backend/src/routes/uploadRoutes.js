@@ -13,7 +13,7 @@ router.post("/", protect, upload.single("image"), (req, res) => {
     throw new Error("Please upload an image file");
   }
 
-  const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  const imageUrl = `/uploads/${req.file.filename}`;
   
   successResponse(res, 200, "Image uploaded successfully", { url: imageUrl });
 });

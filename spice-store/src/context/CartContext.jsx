@@ -189,7 +189,12 @@ export function CartProvider({ children }) {
   const decreaseQuantity = async (productId) => {
     const item = cartItems.find((item) => String(item._id) === String(productId));
     if (!item) return;
-    const newQty = item.quantity > 1 ? item.quantity - 1 : 1;
+    
+    if (item.quantity === 1) {
+      return removeFromCart(productId);
+    }
+    
+    const newQty = item.quantity - 1;
 
     if (!user) {
       const currentCart = JSON.parse(localStorage.getItem("guest_cart")) || [];

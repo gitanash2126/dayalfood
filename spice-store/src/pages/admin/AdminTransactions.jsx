@@ -13,6 +13,18 @@ export default function AdminTransactions() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    const apiBase = import.meta.env.VITE_API_URL.replace("/api", "");
+    if (url.startsWith("http")) {
+      if (url.includes("localhost") && window.location.hostname !== "localhost") {
+        return url.replace(/https?:\/\/localhost:\d+/, apiBase);
+      }
+      return url;
+    }
+    return `${apiBase}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     fetchTransactions();
   }, []);
@@ -113,9 +125,9 @@ export default function AdminTransactions() {
                     <p className="text-sm font-bold text-gray-500 mb-3 flex items-center justify-center gap-2">
                       <ImageIcon size={16} /> Payment Screenshot
                     </p>
-                    <a href={order.paymentScreenshot} target="_blank" rel="noreferrer">
+                    <a href={getImageUrl(order.paymentScreenshot)} target="_blank" rel="noreferrer">
                       <img 
-                        src={order.paymentScreenshot} 
+                        src={getImageUrl(order.paymentScreenshot)} 
                         alt="Payment Proof" 
                         className="w-full max-h-[300px] object-contain rounded-xl border border-gray-200 shadow-sm hover:opacity-90 transition"
                       />
