@@ -28,6 +28,8 @@ const createOrder = asyncHandler(async (req, res) => {
     itemsPrice,
     taxPrice,
     shippingPrice,
+    discountPrice,
+    couponCodeUsed,
     totalPrice,
   } = req.body;
 
@@ -96,6 +98,10 @@ const createOrder = asyncHandler(async (req, res) => {
     taxPrice,
 
     shippingPrice,
+    
+    discountPrice: discountPrice || 0,
+    
+    couponCodeUsed: couponCodeUsed || "",
 
     totalPrice,
   });

@@ -39,6 +39,8 @@ import AdminLowStock from "./pages/admin/AdminLowStock";
 
 import AdminTransactions from "./pages/admin/AdminTransactions";
 
+import AdminOffers from "./pages/admin/AdminOffers";
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -97,6 +99,9 @@ export default function App() {
 
             {/* TRANSACTIONS */}
             <Route path="transactions" element={<AdminTransactions />} />
+
+            {/* OFFERS */}
+            <Route path="offers" element={<AdminOffers />} />
           </Route>
         </Routes>
 

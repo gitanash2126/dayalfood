@@ -41,7 +41,7 @@ export default function ProductDetails() {
 
   const { user } = useAuth();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [ratingInput, setRatingInput] = useState(5);
+  const [ratingInput, setRatingInput] = useState(0);
   const [commentInput, setCommentInput] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
@@ -51,7 +51,7 @@ export default function ProductDetails() {
   useEffect(() => {
     if (slug) {
       setActiveImageIndex(0);
-      setRatingInput(5);
+      setRatingInput(0);
       setCommentInput("");
       fetchProduct();
     }
@@ -195,6 +195,10 @@ export default function ProductDetails() {
       navigate("/login");
       return;
     }
+    if (ratingInput === 0) {
+      toast.error("Please select a rating (1-5 stars)");
+      return;
+    }
     if (!commentInput.trim()) {
       toast.error("Review comment cannot be empty");
       return;
@@ -208,7 +212,7 @@ export default function ProductDetails() {
       });
       toast.success("Review submitted successfully");
       setCommentInput("");
-      setRatingInput(5);
+      setRatingInput(0);
       fetchProduct(); // Refresh product data to see new review
     } catch (error) {
       console.log(error);

@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   CreditCard,
+  Gift,
 } from "lucide-react";
 
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -79,6 +80,14 @@ export default function AdminLayout() {
       path: "/admin/low-stock",
 
       icon: AlertTriangle,
+    },
+
+    {
+      name: "Offers",
+
+      path: "/admin/offers",
+
+      icon: Gift,
     },
   ];
 

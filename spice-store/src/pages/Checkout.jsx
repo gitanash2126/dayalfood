@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { ShoppingBag, MapPin, Phone, User, CheckCircle2, Plus } from "lucide-react";
+import { ShoppingBag, MapPin, Phone, User, CheckCircle2, Plus, X } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
 
@@ -43,8 +43,13 @@ export default function Checkout() {
 
   // SAVED ADDRESSES
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  // COUPON
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   // ==========================================
   // CHECK AUTH & CART
@@ -159,14 +164,47 @@ export default function Checkout() {
   }, [postalCode, city]);
 
   // SHIPPING & DISCOUNT
-  const discount = paymentMethod === "Online" ? Number(cartTotal) * 0.10 : 0;
+  const paymentDiscount = paymentMethod === "Online" ? Number(cartTotal) * 0.10 : 0;
   
+  let couponDiscount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === "percentage") {
+      couponDiscount = (Number(cartTotal) * appliedCoupon.discountValue) / 100;
+    } else {
+      couponDiscount = appliedCoupon.discountValue;
+    }
+  }
+
+  const totalDiscount = paymentDiscount + couponDiscount;
+
   let shippingCharge = 49; // Flat rate
   if (Number(cartTotal) > 399) {
     shippingCharge = 0; // Free shipping above 399
   }
 
-  const finalTotal = Math.round(Number(cartTotal) - discount + shippingCharge);
+  const finalTotal = Math.max(0, Math.round(Number(cartTotal) - totalDiscount + shippingCharge));
+
+  // APPLY COUPON HANDLER
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const { data } = await API.post("/offers/validate-coupon", { couponCode });
+      setAppliedCoupon(data.data);
+    } catch (err) {
+      setCouponError(err.response?.data?.message || "Invalid coupon");
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
 
   // ==========================================
   // PLACE ORDER
@@ -233,6 +271,8 @@ export default function Checkout() {
         itemsPrice: cartTotal,
         shippingPrice: shippingCharge,
         taxPrice: 0,
+        discountPrice: totalDiscount,
+        couponCodeUsed: appliedCoupon ? appliedCoupon.couponCode : "",
         totalPrice: finalTotal,
       });
 
@@ -518,24 +558,72 @@ export default function Checkout() {
               <span>Shipping</span>
 
               <span className={shippingCharge === 0 ? "text-green-600 font-semibold" : "font-semibold"}>
-                {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
+                {shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`}
               </span>
             </div>
 
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Online Discount (10%)</span>
-                <span className="font-semibold">-₹{Math.round(discount)}</span>
+            {paymentDiscount > 0 && (
+              <div className="flex justify-between text-green-600 font-semibold">
+                <span>Online Payment Discount (10%)</span>
+                <span>-₹{Math.round(paymentDiscount)}</span>
               </div>
             )}
 
-            <hr />
+            {appliedCoupon && (
+              <div className="flex justify-between text-green-600 font-semibold">
+                <span>Coupon ({appliedCoupon.couponCode})</span>
+                <span>-₹{Math.round(couponDiscount)}</span>
+              </div>
+            )}
 
-            <div className="flex justify-between font-bold text-2xl">
+            <hr className="my-4" />
+
+            <div className="flex justify-between text-xl font-bold">
               <span>Total</span>
 
               <span className="text-primary">₹{finalTotal}</span>
             </div>
+          </div>
+
+          {/* COUPON SECTION */}
+          <div className="mt-8 border-t pt-6">
+            <h3 className="font-semibold text-gray-700 mb-3">Have a coupon code?</h3>
+            {!appliedCoupon ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="flex-1 border rounded-xl px-4 py-3 outline-none focus:border-primary uppercase text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponCode}
+                    className="bg-gray-800 hover:bg-black text-white px-5 py-3 rounded-xl font-semibold transition disabled:opacity-50 text-sm"
+                  >
+                    {couponLoading ? "..." : "Apply"}
+                  </button>
+                </div>
+                {couponError && <p className="text-red-500 text-xs font-semibold">{couponError}</p>}
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-green-700 font-bold text-sm">{appliedCoupon.couponCode} Applied!</p>
+                  <p className="text-green-600 text-xs mt-0.5">{appliedCoupon.discountText}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="text-gray-400 hover:text-red-500 transition"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

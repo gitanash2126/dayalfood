@@ -11,6 +11,7 @@ import {
   LogOut,
   LayoutDashboard,
   PackageCheck,
+  Search,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -80,6 +81,15 @@ export default function Navbar() {
               className="hover:text-primary transition font-medium"
             >
               Products
+            </Link>
+
+            {/* SEARCH ICON */}
+            <Link
+              to="/products"
+              className="text-gray-700 hover:text-primary transition p-2 rounded-full hover:bg-gray-50"
+              title="Search Products"
+            >
+              <Search size={20} />
             </Link>
 
             {/* USER */}
@@ -161,6 +171,14 @@ export default function Navbar() {
 
           {/* MOBILE ACTIONS */}
           <div className="flex md:hidden items-center gap-3">
+            {/* SEARCH */}
+            <Link
+              to="/products"
+              className="p-2 text-gray-700 hover:text-primary"
+            >
+              <Search size={22} />
+            </Link>
+
             {/* CART */}
             <button
               onClick={() => setCartOpen(true)}

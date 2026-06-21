@@ -12,6 +12,8 @@ import API from "../api/axios";
 import { groupProducts } from "../utils/productHelpers";
 import localProducts from "../data/products.js";
 
+import { getProductImage } from "../utils/productImages";
+
 import heroImg from "../assets/products/mishritkhadamasala.jpeg";
 import offerImg from "../assets/products/badiilaichi.jpeg";
 import wholeSpicesImg from "../assets/products/khadamasala.jpeg";
@@ -47,10 +49,14 @@ export default function Home() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [activeOffer, setActiveOffer] = useState(null);
+
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=2070&auto=format&fit=crop";
 
   // FETCH PRODUCTS
   useEffect(() => {
     fetchProducts();
+    fetchActiveOffer();
   }, []);
 
   const fetchProducts = async () => {
@@ -67,10 +73,70 @@ export default function Home() {
     }
   };
 
+  const fetchActiveOffer = async () => {
+    try {
+      const { data } = await API.get("/offers/active");
+      if (data.data) {
+        setActiveOffer(data.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
 
 
   return (
     <div className="overflow-hidden bg-[#fffdf8]">
+      {/* COMPACT OFFER BANNER */}
+      {activeOffer && (
+        <section className="bg-gradient-to-r from-[#d97706] to-[#b45309] py-3 relative overflow-hidden shadow-md">
+          {/* Subtle glow */}
+          <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
+          
+          <div className="container-custom relative z-10">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-white text-center sm:text-left">
+              {/* Badge */}
+              <div className="flex items-center gap-2">
+                <span className="bg-white text-[#d97706] text-[10px] sm:text-xs font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  Special Offer
+                </span>
+              </div>
+              
+              {/* Text */}
+              <div className="flex-1 max-w-2xl">
+                <p className="font-medium text-sm sm:text-base leading-tight">
+                  <span className="font-bold text-yellow-200 mr-2">{activeOffer.title}</span>
+                  <span className="opacity-90 hidden sm:inline">{activeOffer.description.length > 80 ? activeOffer.description.substring(0, 80) + '...' : activeOffer.description}</span>
+                </p>
+              </div>
+
+              {/* Action */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 mt-2 sm:mt-0">
+                <div className="flex flex-col items-center sm:items-end">
+                  <div className="font-black text-lg sm:text-2xl text-yellow-300 drop-shadow-sm leading-none">
+                    {activeOffer.discountText}
+                  </div>
+                  {activeOffer.couponCode && (
+                    <span className="text-[10px] sm:text-xs text-orange-100 mt-1 font-semibold tracking-wider">
+                      CODE: <span className="text-white border border-dashed border-white/40 px-1 rounded bg-white/10">{activeOffer.couponCode}</span>
+                    </span>
+                  )}
+                </div>
+                <Link
+                  to="/products"
+                  className="bg-white text-[#b45309] hover:bg-gray-50 text-xs sm:text-sm font-bold px-4 py-2 rounded-full shadow-sm transition-transform hover:scale-105 flex items-center gap-1"
+                >
+                  Shop Now
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-orange-100">
         {/* BG */}
@@ -257,67 +323,6 @@ export default function Home() {
                 No Products Found
               </div>
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* OFFER BANNER */}
-      <section className="py-12 bg-primary overflow-hidden relative">
-        {/* BG */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="w-[500px] h-[500px] bg-white rounded-full absolute -top-40 -left-40"></div>
-
-          <div className="w-[400px] h-[400px] bg-white rounded-full absolute bottom-0 right-0"></div>
-        </div>
-
-        <div className="container-custom relative">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
-            {/* LEFT */}
-            <div>
-              <p className="text-orange-100 font-semibold text-lg">
-                Limited Time Offer
-              </p>
-
-              <h2 className="font-heading text-5xl text-white mt-5 leading-tight">
-                Get Fresh Indian Spices
-                <br />
-                Delivered To Your Doorstep
-              </h2>
-
-              <p className="text-orange-50 mt-7 text-lg leading-9">
-                Experience premium quality masalas with rich aroma, authentic
-                flavor and farm-fresh ingredients.
-              </p>
-
-              <div className="flex flex-wrap gap-5 mt-10">
-                <Link
-                  to="/products"
-                  className="bg-white text-primary px-8 py-5 rounded-2xl font-semibold hover:scale-105 transition"
-                >
-                  Shop Now
-                </Link>
-
-                <button className="border border-white text-white px-8 py-5 rounded-2xl font-semibold hover:bg-white hover:text-primary transition">
-                  Explore More
-                </button>
-              </div>
-            </div>
-
-            {/* RIGHT */}
-            <div className="relative">
-              <img
-                src={offerImg}
-                alt="Offer"
-                className="rounded-[40px] h-[500px] w-full object-cover shadow-2xl"
-              />
-
-              {/* DISCOUNT */}
-              <div className="absolute top-6 right-6 bg-white text-primary px-8 py-5 rounded-3xl shadow-xl">
-                <p className="text-sm font-medium">Special Discount</p>
-
-                <h3 className="text-5xl font-bold mt-1">30% OFF</h3>
-              </div>
-            </div>
           </div>
         </div>
       </section>
