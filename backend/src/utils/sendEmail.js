@@ -1,15 +1,18 @@
 const nodemailer = require("nodemailer");
 
-const sendEmail = async (options) => {
-  // Create a transporter
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+// Create a reusable transporter outside the function
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  pool: true, // Use pooled connections for faster subsequent emails
+  maxConnections: 1,
+  maxMessages: 100,
+});
 
+const sendEmail = async (options) => {
   // Define email options
   const mailOptions = {
     from: `Dayal Food Orders <${process.env.EMAIL_USER}>`,

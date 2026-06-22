@@ -163,24 +163,27 @@ const createOrder = asyncHandler(async (req, res) => {
     const ownerEmail = process.env.EMAIL_USER;
 
     if (ownerEmail) {
-        // Run asynchronously without awaiting so it doesn't slow down the Place Order button
-        sendEmail({
-            to: ownerEmail,
-            subject: `🚀 New Order: ₹${totalPrice} by ${shippingAddress.fullName}`,
-            html: emailHtml
-        }).then((response) => {
+        // Await the email send to ensure it completes before the request finishes
+        // We wrap it in a try-catch so if email fails, the user's order still goes through
+        try {
+            const response = await sendEmail({
+                to: ownerEmail,
+                subject: `🚀 New Order: ₹${totalPrice} by ${shippingAddress.fullName}`,
+                html: emailHtml
+            });
             if (response.success) {
                 console.log("Email notification sent successfully to Owner");
             } else {
                 console.error("Email notification failed:", response.error);
             }
-        }).catch((err) => console.log("Email send error", err));
+        } catch (err) {
+            console.error("Critical error sending email:", err);
+        }
     } else {
         console.log("No EMAIL_USER defined. Skipping notification.");
     }
   } catch (error) {
-    console.log("Email Error:", error.message);
-    console.log("Full Error:", error);
+    console.error("Error generating or sending email HTML:", error);
   }
 
   // ==========================================
