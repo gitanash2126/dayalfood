@@ -9,7 +9,7 @@ import { useCart } from "../../context/CartContext";
 import { productImages, getProductImage } from "../../utils/productImages";
 
 export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
+  const { cartItems, addToCart, increaseQuantity, decreaseQuantity } = useCart();
 
   // Establish variants list (either from grouped product or fall back to single variant)
   const variants = product?.variants && product.variants.length > 0
@@ -42,6 +42,9 @@ export default function ProductCard({ product }) {
 
   // PRODUCT LINK
   const productLink = `/products/${productId}`;
+
+  // Check if current variant is in cart
+  const cartItem = cartItems.find((item) => String(item._id) === String(selectedVariant._id));
 
   // =====================================
   // PRODUCT IMAGE MATCHING
@@ -157,24 +160,54 @@ export default function ProductCard({ product }) {
             </span>
           </div>
 
-          {/* ADD TO CART */}
-          <button
-            onClick={() => {
-              const toAdd = selectedVariant?.productObj || {
-                ...product,
-                _id: selectedVariant?._id,
-                id: selectedVariant?._id,
-                price: selectedVariant?.price,
-                sale_price: selectedVariant?.sale_price || selectedVariant?.price,
-                weight: selectedVariant?.weight,
-                stock: selectedVariant?.stock,
-              };
-              addToCart(toAdd);
-            }}
-            className="bg-primary hover:bg-secondary text-white p-2.5 sm:p-3.5 rounded-[14px] transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
-          >
-            <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
-          </button>
+          {/* ADD TO CART / CONTROLS */}
+          <div className="flex-shrink-0">
+            {cartItem ? (
+              <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-[14px] p-1 shadow-sm w-[90px] sm:w-[100px]">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    decreaseQuantity(cartItem._id);
+                  }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-xl shadow-sm text-dark hover:bg-orange-100 hover:text-primary transition-colors text-lg font-medium"
+                >
+                  -
+                </button>
+                <span className="font-bold text-sm sm:text-base text-dark w-6 text-center">
+                  {cartItem.quantity}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    increaseQuantity(cartItem._id);
+                  }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-xl shadow-sm text-dark hover:bg-orange-100 hover:text-primary transition-colors text-lg font-medium"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent navigating if this is inside a link somehow (though it's not)
+                  const toAdd = selectedVariant?.productObj || {
+                    ...product,
+                    _id: selectedVariant?._id,
+                    id: selectedVariant?._id,
+                    price: selectedVariant?.price,
+                    sale_price: selectedVariant?.sale_price || selectedVariant?.price,
+                    weight: selectedVariant?.weight,
+                    stock: selectedVariant?.stock,
+                  };
+                  addToCart(toAdd);
+                }}
+                className="bg-primary hover:bg-secondary text-white p-2.5 sm:p-3.5 rounded-[14px] transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12"
+                title="Add to Cart"
+              >
+                <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
