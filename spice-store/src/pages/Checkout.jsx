@@ -43,6 +43,7 @@ export default function Checkout() {
 
   // SAVED ADDRESSES
   const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [isAddingNew, setIsAddingNew] = useState(false);
 
   // COUPON
@@ -78,12 +79,12 @@ export default function Checkout() {
           setSavedAddresses(data.data);
           const def = data.data.find(a => a.isDefault) || data.data[0];
           setSelectedAddressId(def._id);
-          setFullName(def.fullName);
-          setPhone(def.phone);
-          setAddress(def.address);
-          setCity(def.city);
-          setState(def.state);
-          setPostalCode(def.postalCode);
+          setFullName(def.fullName || "");
+          setPhone(String(def.phone || ""));
+          setAddress(def.address || "");
+          setCity(def.city || "");
+          setState(def.state || "");
+          setPostalCode(String(def.postalCode || ""));
         } else {
           setIsAddingNew(true);
           setFullName(user.name || "");
@@ -103,12 +104,12 @@ export default function Checkout() {
     setIsAddingNew(false);
     const def = savedAddresses.find(a => a._id === id);
     if (def) {
-      setFullName(def.fullName);
-      setPhone(def.phone);
-      setAddress(def.address);
-      setCity(def.city);
-      setState(def.state);
-      setPostalCode(def.postalCode);
+      setFullName(def.fullName || "");
+      setPhone(String(def.phone || ""));
+      setAddress(def.address || "");
+      setCity(def.city || "");
+      setState(def.state || "");
+      setPostalCode(String(def.postalCode || ""));
     }
   };
 
@@ -118,10 +119,13 @@ export default function Checkout() {
   useEffect(() => {
     const fetchDistance = async () => {
       // Require both Postal Code and City for accurate Indian geocoding
-      if (postalCode.length === 6 && city.length >= 3) {
+      const pCode = String(postalCode || "");
+      const cCity = String(city || "");
+
+      if (pCode.length === 6 && cCity.length >= 3) {
         setCalculatingDistance(true);
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${postalCode}&city=${encodeURIComponent(city)}&country=India&format=json`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pCode}&city=${encodeURIComponent(cCity)}&country=India&format=json`);
           const data = await res.json();
           if (data && data.length > 0) {
             const userLat = parseFloat(data[0].lat);

@@ -1,19 +1,20 @@
 const nodemailer = require("nodemailer");
-
-// Create a reusable transporter outside the function
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  pool: true, // Use pooled connections for faster subsequent emails
-  maxConnections: 1,
-  maxMessages: 100,
-});
+const dotenv = require("dotenv");
 
 const sendEmail = async (options) => {
-  // Define email options
+  // We reload .env on every email send using override: true.
+  // This guarantees that if the user updates their App Password in .env,
+  // the email starts working instantly WITHOUT needing to restart the Node.js server!
+  dotenv.config({ override: true });
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
   const mailOptions = {
     from: `Dayal Food Orders <${process.env.EMAIL_USER}>`,
     to: options.to,
@@ -21,7 +22,6 @@ const sendEmail = async (options) => {
     html: options.html,
   };
 
-  // Send the email
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent successfully: " + info.messageId);

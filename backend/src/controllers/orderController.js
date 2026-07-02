@@ -160,6 +160,7 @@ const createOrder = asyncHandler(async (req, res) => {
       </div>
     `;
 
+    require("dotenv").config({ override: true });
     const ownerEmail = process.env.EMAIL_USER;
 
     if (ownerEmail) {

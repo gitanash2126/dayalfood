@@ -43,10 +43,10 @@ const registerUser = asyncHandler(async (req, res) => {
   if (userExists) {
     if (userExists.email === email) {
       res.status(400);
-      throw new Error("User with this email already exists");
+      throw new Error("Email already registered. Please login.");
     }
     res.status(400);
-    throw new Error("User with this phone number already exists");
+    throw new Error("Phone number already registered. Please login.");
   }
 
   // Create user
@@ -93,14 +93,14 @@ const loginUserWithPhone = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(401);
-    throw new Error("Invalid phone number or password");
+    throw new Error("Phone number not registered. Please sign up.");
   }
 
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
     res.status(401);
-    throw new Error("Invalid phone number or password");
+    throw new Error("Invalid password. Please try again.");
   }
 
   if (!user.isActive) {
